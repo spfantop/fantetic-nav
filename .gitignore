@@ -11,6 +11,8 @@ build
 dist
 .umi
 .vscode
+.idea
+ui/.idea
 draft.md
 data
 data/*
@@ -118,6 +120,9 @@ package-lock.json
 dist/
 
 public/*
+!public/
+!public/index.html
+!public/README.md
 act.secret
 *.exe
 .dev

@@ -40,12 +40,30 @@ const Content = (props: any) => {
     try {
       setLoading(true);
       const r = await FetchList();
-      setData(r);
-      const tagInLocalStorage = window.localStorage.getItem("tag");
-      if (tagInLocalStorage && tagInLocalStorage !== "") {
-        if (r?.catelogs && r?.catelogs.includes(tagInLocalStorage)) {
-          setCurrTag(tagInLocalStorage);
+      // 把“全部工具”放到最后一个
+      if (Array.isArray(r?.catelogs)) {
+        const allIndex = r.catelogs.indexOf("全部工具");
+        if (allIndex !== -1) {
+          const allTag = r.catelogs.splice(allIndex, 1)[0];
+          r.catelogs.push(allTag);
         }
+      }
+      setData(r);
+      // 优先读取本地保存的 tag
+      const tagInLocalStorage = window.localStorage.getItem("tag");
+      if (
+          tagInLocalStorage &&
+          tagInLocalStorage !== "" &&
+          r?.catelogs?.includes(tagInLocalStorage)
+      ) {
+        setCurrTag(tagInLocalStorage);
+      } else {
+        // 没有本地记录时默认选第一个分类（但不是“全部工具”）
+        const defaultTag =
+            Array.isArray(r?.catelogs) && r.catelogs.length > 0
+                ? r.catelogs.find((t) => t !== "全部工具") ?? r.catelogs[0]
+                : "默认";
+        setCurrTag(defaultTag);
       }
     } catch (e) {
       console.log(e);
@@ -225,9 +243,11 @@ const Content = (props: any) => {
         </div>
       </div>
       <div className="record-wraper">
+        <a href="https://henniubi.com" target="_blank" rel="noreferrer">笔尖码动</a>
+        <br></br>
         <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">{data?.setting?.govRecord ?? ""}</a>
       </div>
-      {showGithub && <GithubLink />}
+      {/*{showGithub && <GithubLink />}*/}
       <DarkSwitch showGithub={showGithub} />
     </>
   );

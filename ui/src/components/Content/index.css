@@ -522,7 +522,12 @@
     background-color: #fafbfc;
     text-decoration: none;
     max-width: 350px;
-   
+  background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
+  backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+  -webkit-backdrop-filter: blur(2px) saturate(120%);
+  border-radius: 16px; /* 圆角 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   .card-box:hover {
     transform: translateY(-6px);
@@ -637,6 +642,12 @@
     height: 48px;
     display: flex;
     align-items: center;
+  background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
+  backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+  -webkit-backdrop-filter: blur(2px) saturate(120%);
+  border-radius: 16px; /* 圆角 */
+  border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -662,6 +673,12 @@
     height: 42px;
     display: flex;
     align-items: center;
+    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
+    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    -webkit-backdrop-filter: blur(2px) saturate(120%);
+    border-radius: 16px; /* 圆角 */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -687,6 +704,12 @@
     height: 36px;
     display: flex;
     align-items: center;
+    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
+    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    -webkit-backdrop-filter: blur(2px) saturate(120%);
+    border-radius: 16px; /* 圆角 */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -701,7 +724,7 @@
     grid-template-columns: repeat(2, minmax(140px, 180px));
     grid-auto-rows: 32px;
     grid-gap: 8px;
-    max-width: 400px;
+    max-width: 360px;
     margin: 0 auto;
   }
   
@@ -712,6 +735,12 @@
     height: 32px;
     display: flex;
     align-items: center;
+    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
+    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    -webkit-backdrop-filter: blur(2px) saturate(120%);
+    border-radius: 16px; /* 圆角 */
+    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {

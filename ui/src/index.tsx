@@ -1,19 +1,28 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
+import { ConfigProvider } from 'antd'; // 引入 ConfigProvider
 import './index.css';
 import App from './App';
-import * as serviceWorker from "./serviceWorker"
-// import reportWebVitals from './reportWebVitals';
+import * as serviceWorker from "./serviceWorker";
 
-console.log("欢迎使用 Van Nav 项目")
-console.log("项目地址: https://github.com/mereithhh/van-nav")
-
+// 1️⃣ 获取 root 容器
 const container = document.getElementById('root');
 const root = createRoot(container!);
+
+// 2️⃣ 渲染
 root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+    <React.StrictMode>
+        <ConfigProvider
+            theme={{
+                token: {
+                    fontFamily: '"LXGW WenKai", sans-serif',
+                },
+            }}
+        >
+            <App />
+        </ConfigProvider>
+    </React.StrictMode>
 );
 
+// 3️⃣ 注册 Service Worker
 serviceWorker.register(null);

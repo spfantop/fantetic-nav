@@ -46,6 +46,64 @@
 
 ## 安装方法
 
+### 本地开发
+
+当前仓库的后端会通过 `embed` 内嵌根目录 `public` 静态资源，所以第一次本地启动前需要先构建前端资源。
+
+#### 环境要求
+
+- Go `1.23.5` 左右版本（以 `go.mod` 为准）
+- Node.js 18+
+- `pnpm`
+
+#### Windows 本地启动
+
+在项目根目录执行：
+
+```powershell
+chcp 65001
+powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
+```
+
+该脚本会自动：
+
+- 安装前端依赖
+- 构建 `ui/build`
+- 同步到根目录 `public`
+- 启动后端服务
+
+启动后访问 [http://localhost:6412](http://localhost:6412)。
+
+#### 仅构建静态资源
+
+如果你只想先准备 `public` 目录，再手动启动后端，可执行：
+
+```powershell
+chcp 65001
+powershell -ExecutionPolicy Bypass -File .\scripts\build-public.ps1
+go run .
+```
+
+#### 前后端分离调试
+
+1. 先启动后端：
+
+```powershell
+chcp 65001
+powershell -ExecutionPolicy Bypass -File .\scripts\start-dev.ps1
+```
+
+2. 再新开一个终端启动前端热更新：
+
+```powershell
+chcp 65001
+cd .\ui
+pnpm install
+pnpm run start-win
+```
+
+前端开发地址是 [http://localhost:2333](http://localhost:2333)，会代理到本地 `6412` 后端。
+
 ### Docker
 
 ```
@@ -56,7 +114,7 @@ docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/
 
 - 默认端口 6412
 - 默认账号密码 admin admin 第一次运行后请进入后台修改
-- 数据库会自动创建在当前文件夹中： `nav.db`
+- 数据库会自动创建在当前文件夹下的 `data/nav.db`
 
 ### 可执行文件
 
@@ -66,7 +124,7 @@ docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/
 
 - 默认端口 6412 动时添加 `-port <port>` 参数可指定运行端口。
 - 默认账号密码 admin admin ，第一次运行后请进入后台修改
-- 数据库会自动创建在当前文件夹中： `nav.db`
+- 数据库会自动创建在当前文件夹下的 `data/nav.db`
 
 ### nginx 反向代理
 

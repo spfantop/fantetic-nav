@@ -8,10 +8,16 @@ build:
 	@go build -o van-nav .
 
 run-ui:
-	@cd ./ui/website && pnpm start
+	@cd ./ui && pnpm run start
 
 run-api:
 	@go run .
+
+build-public:
+	@powershell -ExecutionPolicy Bypass -File ./scripts/build-public.ps1
+
+run-dev-win:
+	@powershell -ExecutionPolicy Bypass -File ./scripts/start-dev.ps1
 
 # Run the application
 run:
