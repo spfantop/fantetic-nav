@@ -46,7 +46,7 @@
 根目录安装依赖：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 npm install
 ```
@@ -54,7 +54,7 @@ npm install
 前端安装依赖：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav\ui
 pnpm install
 ```
@@ -64,7 +64,7 @@ pnpm install
 本地开发时请复制 `.dev.vars.example` 为 `.dev.vars`：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 Copy-Item .dev.vars.example .dev.vars
 ```
@@ -85,7 +85,7 @@ JWT_SECRET=replace-with-a-long-random-secret
 推荐方式是先构建前端，再启动 Worker：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 npm run cf:dev:build
 ```
@@ -98,7 +98,7 @@ npm run cf:dev:build
 如果前端已经构建过，也可以直接启动 Worker：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 npm run cf:dev
 ```
@@ -106,7 +106,7 @@ npm run cf:dev
 如果只想调试前端热更新：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav\ui
 pnpm start-win
 ```
@@ -140,7 +140,7 @@ pnpm start-win
 配置线上 secret：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 npx wrangler secret put JWT_SECRET
 ```
@@ -152,7 +152,7 @@ npx wrangler secret put JWT_SECRET
 如果你新建的是一个空 D1，执行下面顺序：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 
 cd ui
@@ -179,7 +179,7 @@ npm run cf:d1:seed
 推荐顺序：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 
 cd ui
@@ -200,7 +200,7 @@ npm run cf:deploy
 正式部署建议顺序如下：
 
 ```powershell
-chcp 65001
+
 cd D:\Code\nav\van-nav
 
 cd ui
