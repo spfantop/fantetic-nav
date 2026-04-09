@@ -1,5 +1,7 @@
 # Fantetic Nav CF
-
+参考项目：https://github.com/Mereithhh/van-nav， 感谢原作者的付出。
+项目示例：https://fantetic-nav-cf.fan-89c.workers.dev/admin
+登陆账号/密码：testadmin/adminadmin
 基于 `Cloudflare Workers + D1 + R2 + React` 的导航站项目，包含首页、管理后台、主题配置、书签管理、分类管理、搜索、图标缓存和 Cloudflare 一体化部署能力。
 
 本仓库已经收敛为 Cloudflare 版本，不再包含旧 Go 后端。
