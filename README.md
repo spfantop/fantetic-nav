@@ -239,27 +239,6 @@ npm run cf:d1:seed
 - `pnpm build`：前端生产构建
 - `pnpm test`：前端测试
 
-## GitHub 发布建议
-
-如果你准备把仓库发布到 GitHub，建议在发布前检查以下内容：
-
-- `wrangler.toml` 中的 Cloudflare 资源 ID 是否为你自己的正式配置
-- `.dev.vars` 没有提交到仓库
-- 不要提交真实的密钥、令牌、Cookie 或后台账号
-- `README.md`、`CHANGELOG.md`、`LICENSE` 保持完整
-- 首次发布建议打 tag，并在 GitHub Release 中说明：
-  - 版本号
-  - 主要功能
-  - 破坏性变更
-  - 初始化 / 升级步骤
-
-推荐的发布说明至少包含：
-
-- 部署方式
-- 数据库初始化方式
-- 已有库升级注意事项
-- 环境变量要求
-
 ## 常见问题
 
 ### 1. `Migration ... duplicate column name`
