@@ -1,5 +1,5 @@
 # Fantetic Nav CF
-*参考项目：https://github.com/Mereithhh/van-nav， 感谢原作者的付出。*
+*参考项目：https://github.com/Mereithhh/van-nav  感谢原作者的付出。*
 > 项目示例：https://fantetic-nav-cf.fan-89c.workers.dev/admin
 > 
 > 登陆账号/密码：testadmin/adminadmin
