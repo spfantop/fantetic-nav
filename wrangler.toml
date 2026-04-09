@@ -9,12 +9,14 @@ not_found_handling = "single-page-application"
 html_handling = "drop-trailing-slash"
 
 [[d1_databases]]
+# Replace with your own Cloudflare D1 database configuration before deployment.
 binding = "DB"
 database_name = "fantetic-nav"
-database_id = "018038b8-5094-40c6-8816-495b7693baf4"
+database_id = "replace-with-your-d1-database-id"
 migrations_dir = "cloudflare/migrations"
 
 [[r2_buckets]]
+# Replace with your own Cloudflare R2 bucket names before deployment.
 binding = "LOGO_BUCKET"
-bucket_name = "fantetic-nav-logos"
-preview_bucket_name = "fantetic-nav-logos-preview"
+bucket_name = "replace-with-your-r2-bucket-name"
+preview_bucket_name = "replace-with-your-r2-preview-bucket-name"
