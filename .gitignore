@@ -1,0 +1,37 @@
+# dependencies
+node_modules/
+
+# local cloudflare state
+.wrangler/
+.dev.vars
+
+# local data / exports
+data/
+nav.db
+
+# build output
+build/
+dist/
+ui/build/
+
+# editor / system
+.idea/
+.vscode/
+.DS_Store
+
+# logs / caches
+logs/
+*.log
+.npm/
+.eslintcache
+.cache/
+coverage/
+.nyc_output/
+
+# misc
+*.pid
+*.pid.lock
+*.seed
+*.tsbuildinfo
+*.tgz
+package-lock.json

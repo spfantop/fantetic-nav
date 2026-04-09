@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body {
+  margin: 0;
+  font-family: var(--app-font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--theme-page-bg);
+  color: var(--theme-text-primary);
+  overflow: hidden;
+}
+:root {
+  --width-small: 500px;
+  --width-medium: 700px;
+  --width-large: 1060px;
+}
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+body.dark-mode .theme-switch-box svg {
+  fill: white;
+}
+body.dark-mode .theme-switch-box svg:hover {
+  fill: #f1f1f1;
+}
+body.dark-mode {
+  background-color: var(--theme-page-bg);
+  color: var(--theme-text-secondary);
+}
+body.dark-mode .select-tag-active {
+  background-color: var(--theme-tag-active-bg);
+  border: 1px solid var(--theme-tag-active-bg);
+}
+body.dark-mode .select-tag {
+  border: 1px solid var(--theme-page-bg);
+  color: var(--theme-text-secondary);
+}
+body.dark-mode .select-tag:hover {
+  background-color: var(--theme-tag-bg);
+  border: 1px solid var(--theme-tag-bg);
+}
+body.dark-mode input {
+  background-color: var(--theme-input-bg);
+  border: 1px solid var(--theme-input-bg);
+  color: var(--theme-text-secondary);
+}
+body.dark-mode input:hover {
+  background-color: var(--theme-panel-bg);
+  border: 1px solid var(--theme-panel-bg);
+}
+body.dark-mode input:focus,
+input:focus-visible {
+  background-color: var(--theme-panel-bg);
+  border: 1px solid var(--theme-input-focus);
+}
+body.dark-mode .card-box {
+  background-color: var(--theme-card-bg);
+}
+body.dark-mode .card-box:hover {
+  box-shadow: 2px 2px 12px 0px rgba(0, 0, 0, 0.2);
+}
+body.dark-mode .card-right-title {
+  color: var(--theme-text-primary);
+}
+body.dark-mode .card-right-bottom {
+  color: var(--theme-text-secondary);
+}
+body.dark-mode .card-tag {
+  background-color: var(--theme-tag-bg);
+  color: var(--theme-text-secondary);
+}
+
+@media (max-width: 1060px) and (min-width: 700px) {
+  body.dark-mode span.card-tag {
+    background-color: #222222 !important;
+  }
+}
+
+@media (max-width: 700px) and (min-width: 500px) {
+  body.dark-mode a.card-box {
+    background-color: var(--theme-card-bg);
+  }
+}
+@media (max-width: 500px) {
+  body.dark-mode a.card-box {
+    background-color: var(--theme-card-bg);
+  }
+}

@@ -1,0 +1,4 @@
+# Cloudflare Worker 本地开发环境变量示例。
+# 真正本地调试时请复制为 .dev.vars 并填写实际值。
+
+JWT_SECRET=replace-with-a-long-random-secret

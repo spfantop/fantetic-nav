@@ -1,0 +1,25 @@
+{
+  "name": "fantetic-nav-cloudflare",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "cf:dev": "wrangler dev --ip 0.0.0.0",
+    "cf:dev:build": "cd ui && pnpm build && cd .. && wrangler dev --ip 0.0.0.0",
+    "cf:deploy": "wrangler deploy",
+    "cf:typecheck": "tsc --noEmit",
+    "cf:test": "vitest run cloudflare/worker/src/auth.test.ts cloudflare/worker/src/db.test.ts",
+    "cf:d1:migrate": "wrangler d1 migrations apply fantetic-nav",
+    "cf:d1:seed": "wrangler d1 execute fantetic-nav --file ./cloudflare/seed.sql"
+  },
+  "dependencies": {
+    "hono": "^4.6.10",
+    "jose": "^5.9.6"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260405.1",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8",
+    "wrangler": "^3.114.0"
+  }
+}

@@ -1,0 +1,64 @@
+.main {
+    margin: 0 auto;
+    height: 96vh;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+:root {
+  --app-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  /* 根变量作为首次渲染兜底，保持与后台和数据库里的最新亮色默认值一致。 */
+  --theme-page-bg: #f6f2e8;
+  --theme-panel-bg: rgba(255, 250, 242, 0.86);
+  --theme-card-bg: rgba(255, 252, 247, 0.92);
+  --theme-card-border: rgba(169, 137, 96, 0.18);
+  --theme-text-primary: #322417;
+  --theme-text-secondary: #78644d;
+  --theme-tag-bg: #efe3d1;
+  --theme-tag-active-bg: #9b7247;
+  --theme-input-bg: rgba(255, 255, 255, 0.76);
+  --theme-input-border: rgba(176, 144, 105, 0.2);
+  --theme-input-focus: #d8a45c;
+  --theme-primary: #a36a2f;
+  --theme-primary-text: #fffaf4;
+  --theme-admin-header-bg: rgba(255, 248, 239, 0.88);
+  --theme-admin-sidebar-bg: rgba(247, 237, 221, 0.9);
+  --theme-background-image: none;
+  --admin-background-image: none;
+}
+
+html,
+body,
+#root,
+button,
+input,
+textarea,
+select {
+  font-family: var(--app-font-family);
+}
+
+.ant-app,
+.ant-btn,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select,
+.ant-select-selector,
+.ant-modal,
+.ant-drawer,
+.ant-card,
+.ant-form,
+.ant-tabs,
+.ant-menu,
+.ant-dropdown,
+.ant-popover,
+.ant-tooltip,
+.ant-table,
+.ant-notification,
+.ant-message,
+.ant-typography {
+  font-family: var(--app-font-family) !important;
+}
+
+.span-3 {
+  grid-column-start: span 3;
+}
