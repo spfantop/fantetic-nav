@@ -1,7 +1,8 @@
-import { Button, Card, Form, Input, message, Select, Spin, Switch } from "antd";
-import { useCallback, useEffect } from "react";
-import { fetchUpdateSetting, fetchUpdateUser, fetchUpdateSiteConfig } from "../../../utils/api";
-import { useData } from "../hooks/useData";
+import { Button, Card, Form, Input, message, Select, Spin, Switch } from 'antd';
+import { useCallback, useEffect } from 'react';
+import { fetchUpdateSetting, fetchUpdateUser, fetchUpdateSiteConfig } from '../../../utils/api';
+import { useData } from '../hooks/useData';
+import './Setting.css';
 
 export interface SettingProps {}
 
@@ -21,9 +22,9 @@ export const Setting: React.FC<SettingProps> = () => {
     async (values: any) => {
       try {
         await fetchUpdateUser({ ...values, id: store?.user?.id });
-        message.success("修改成功");
-      } catch (err) {
-        message.warning("修改失败");
+        message.success('修改成功');
+      } catch {
+        message.warning('修改失败');
       } finally {
         reload();
       }
@@ -35,9 +36,9 @@ export const Setting: React.FC<SettingProps> = () => {
     async (values: any) => {
       try {
         await fetchUpdateSetting(values);
-        message.success("修改成功");
-      } catch (err) {
-        message.warning("修改失败");
+        message.success('修改成功');
+      } catch {
+        message.warning('修改失败');
       } finally {
         reload();
       }
@@ -49,9 +50,9 @@ export const Setting: React.FC<SettingProps> = () => {
     async (values: any) => {
       try {
         await fetchUpdateSiteConfig(values);
-        message.success("修改成功");
-      } catch (err) {
-        message.warning("修改失败");
+        message.success('修改成功');
+      } catch {
+        message.warning('修改失败');
       } finally {
         reload();
       }
@@ -60,8 +61,8 @@ export const Setting: React.FC<SettingProps> = () => {
   );
 
   return (
-    <div className="overflow-auto">
-      <Card title="修改用户信息" style={{ marginBottom: 32 }}>
+    <div className="overflow-auto admin-setting-page">
+      <Card className="admin-setting-card" title="修改用户信息" style={{ marginBottom: 24 }}>
         <Spin spinning={loading}>
           <Form onFinish={handleUpdateUser} initialValues={store?.user ?? {}} form={userForm}>
             <Form.Item label="用户名" name="name" required labelCol={{ span: 4 }}>
@@ -79,7 +80,7 @@ export const Setting: React.FC<SettingProps> = () => {
         </Spin>
       </Card>
 
-      <Card title="修改网站信息">
+      <Card className="admin-setting-card" title="修改网站信息" style={{ marginBottom: 24 }}>
         <Spin spinning={loading}>
           <Form
             onFinish={handleUpdateWebSite}
@@ -90,9 +91,9 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item
               label="网站 logo"
               name="favicon"
-              tooltip="输入 logo 的 url，仅支持 png 或 svg"
+              tooltip="输入 logo 的 URL，仅支持 png 或 svg 格式"
               required
-              rules={[{ required: true, message: "请输入网站 logo 链接" }]}
+              rules={[{ required: true, message: '请输入网站 logo 链接' }]}
             >
               <Input placeholder="请输入网站 logo" />
             </Form.Item>
@@ -100,7 +101,7 @@ export const Setting: React.FC<SettingProps> = () => {
               label="网站标题"
               name="title"
               required
-              rules={[{ required: true, message: "请输入网站 title" }]}
+              rules={[{ required: true, message: '请输入网站标题' }]}
             >
               <Input placeholder="请输入网站标题" />
             </Form.Item>
@@ -111,13 +112,14 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item
               label="默认跳转方式"
               name="jumpTargetBlank"
-              rules={[{ required: true, message: "这是必填项" }]}
+              rules={[{ required: true, message: '这是必填项' }]}
               tooltip="选择点击卡片后的默认跳转方式"
             >
               <Select
+                popupClassName="admin-setting-select-popup"
                 options={[
-                  { label: "原地跳转", value: false },
-                  { label: "新标签页", value: true },
+                  { label: '原地跳转', value: false },
+                  { label: '新标签页', value: true },
                 ]}
               />
             </Form.Item>
@@ -125,7 +127,7 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item
               label="logo 192x192"
               name="logo192"
-              rules={[{ required: true, message: "请输入 192x192 的 logo 链接" }]}
+              rules={[{ required: true, message: '请输入 192x192 的 logo 链接' }]}
               tooltip="192x192 logo，用于可安装的 web 应用"
             >
               <Input placeholder="192x192 logo 链接" />
@@ -133,7 +135,7 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item
               label="logo 512x512"
               name="logo512"
-              rules={[{ required: true, message: "请输入 512x512 的 logo 链接" }]}
+              rules={[{ required: true, message: '请输入 512x512 的 logo 链接' }]}
               tooltip="512x512 logo，用于可安装的 web 应用"
             >
               <Input placeholder="512x512 logo 链接" />
@@ -171,7 +173,7 @@ export const Setting: React.FC<SettingProps> = () => {
         </Spin>
       </Card>
 
-      <Card title="修改网站配置" style={{ marginTop: 32 }}>
+      <Card className="admin-setting-card" title="修改网站配置">
         <Spin spinning={loading}>
           <Form
             onFinish={handleUpdateSiteConfig}
@@ -199,7 +201,7 @@ export const Setting: React.FC<SettingProps> = () => {
               label="显示时间"
               name="showClock"
               valuePropName="checked"
-              tooltip="控制前台搜索框上方的时间日期展示（移动端不显示）"
+              tooltip="控制前台搜索框上方时间日期展示（移动端不显示）"
             >
               <Switch />
             </Form.Item>

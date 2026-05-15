@@ -526,8 +526,6 @@
   backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
   -webkit-backdrop-filter: blur(2px) saturate(120%);
   border-radius: 16px; /* 圆角 */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   .card-box:hover {
     transform: translateY(-6px);
@@ -557,7 +555,6 @@
   .card-tag {
     color: #878a95;
     font-size: 12px;
-    background-color: #f2f3f5;
     display: inline-block;
     box-sizing: border-box;
     padding: 0 8px;
@@ -646,8 +643,6 @@
   backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
   -webkit-backdrop-filter: blur(2px) saturate(120%);
   border-radius: 16px; /* 圆角 */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -677,8 +672,6 @@
     backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
     -webkit-backdrop-filter: blur(2px) saturate(120%);
     border-radius: 16px; /* 圆角 */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -708,8 +701,6 @@
     backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
     -webkit-backdrop-filter: blur(2px) saturate(120%);
     border-radius: 16px; /* 圆角 */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -739,8 +730,6 @@
     backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
     -webkit-backdrop-filter: blur(2px) saturate(120%);
     border-radius: 16px; /* 圆角 */
-    border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
   }
   
   .content.compact-grid .card-box:hover {
@@ -751,9 +740,6 @@
 }
 
 /* 暗色模式下的精简模式样式 */
-body.dark-mode .content.compact-grid .card-box {
-  background-color: #2a2a2a;
-}
 
 body.dark-mode .content.compact-grid .card-box:hover {
   background-color: #3a3a3a;
@@ -772,7 +758,7 @@ body.dark-mode .content.compact-grid .card-box:hover {
 }
 
 .local-clock-time {
-  font-size: 26px;
+  font-size: 50px;
   font-weight: 600;
   letter-spacing: 0.04em;
   line-height: 1.2;
@@ -829,5 +815,105 @@ body.dark-mode .back-top-btn:hover {
     right: 12px;
     bottom: 94px;
     padding: 7px 12px;
+  }
+}
+
+.topbar-content {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topbar-content .search,
+.topbar-content .tag-selector,
+.topbar-content .local-clock {
+  width: 100%;
+  max-width: 860px;
+}
+
+.topbar-content .local-clock {
+  text-align: center;
+}
+
+.clock-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.clock-row .local-clock {
+  width: 100%;
+  text-align: center;
+}
+
+.back-top-icon-btn {
+  position: fixed;
+  right: 10px;
+  bottom: 118px;
+  z-index: 20;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  line-height: 0;
+}
+
+.back-top-icon-btn svg {
+  fill: #3d3d3d;
+  transition: all 0.3s;
+}
+
+.back-top-icon-btn svg:hover {
+  fill: #121212;
+}
+
+@media (max-width: 500px) {
+  .back-top-icon-btn {
+    right: 10px;
+    bottom: 72px;
+  }
+
+  .back-top-icon-btn svg {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 700px) and (min-width: 500px) {
+  .back-top-icon-btn {
+    right: 14px;
+    bottom: 78px;
+  }
+
+  .back-top-icon-btn svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (max-width: 1060px) and (min-width: 700px) {
+  .back-top-icon-btn {
+    right: 10px;
+    bottom: 90px;
+  }
+
+  .back-top-icon-btn svg {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+@media (min-width: 1060px) {
+  .back-top-icon-btn {
+    right: 10px;
+    bottom: 110px;
+  }
+
+  .back-top-icon-btn svg {
+    width: 40px;
+    height: 40px;
   }
 }

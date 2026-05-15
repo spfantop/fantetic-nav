@@ -7,6 +7,4 @@
   backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
   -webkit-backdrop-filter: blur(2px) saturate(120%);
   border-radius: 16px; /* 圆角 */
-  border: 1px solid rgba(255, 255, 255, 0.2); /* 半透明边框增强玻璃感 */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* 可选阴影，更立体 */
 }

@@ -4,7 +4,7 @@ export const isLogin = () => {
 
 export const getLogoUrl = (url: string) => {
   if (url.startsWith('http')) {
-    return `/api/img?url=${url}`
+    return `/api/img?url=${encodeURIComponent(url)}`
   } else {
     return url;
   }

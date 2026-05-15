@@ -15,19 +15,47 @@ import LocalClock from "./LocalClock";
 const FRAME_INITIAL_COUNT = 48;
 const FRAME_BATCH_COUNT = 48;
 const BACK_TO_TOP_THRESHOLD = 300;
+const ALL_TOOLS_TAG = "全部工具";
+const ADMIN_TAG = "管理后台";
+const DEFAULT_TAG = "默认";
+const HOME_CACHE_TTL = 2000;
+
+let homeDataCache: any = null;
+let homeDataCacheAt = 0;
+let homeDataInFlight: Promise<any> | null = null;
 
 const mutiSearch = (s, t) => {
   const source = (s as string).toLowerCase();
   const target = t.toLowerCase();
   const rawInclude = source.includes(target);
-  const pinYinInlcude = Boolean(pinyin.match(source, target));
-  return rawInclude || pinYinInlcude;
+  const pinYinInclude = Boolean(pinyin.match(source, target));
+  return rawInclude || pinYinInclude;
 };
 
-const Content = (props: any) => {
+const fetchHomeData = async () => {
+  const now = Date.now();
+  if (homeDataCache && now - homeDataCacheAt < HOME_CACHE_TTL) {
+    return homeDataCache;
+  }
+  if (homeDataInFlight) {
+    return homeDataInFlight;
+  }
+  homeDataInFlight = FetchList()
+    .then((result) => {
+      homeDataCache = result;
+      homeDataCacheAt = Date.now();
+      return result;
+    })
+    .finally(() => {
+      homeDataInFlight = null;
+    });
+  return homeDataInFlight;
+};
+
+const Content = () => {
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(true);
-  const [currTag, setCurrTag] = useState("全部工具");
+  const [currTag, setCurrTag] = useState(ALL_TOOLS_TAG);
   const [searchString, setSearchString] = useState("");
   const [val, setVal] = useState("");
   const [searchEngineCards, setSearchEngineCards] = useState<any[]>([]);
@@ -54,12 +82,14 @@ const Content = (props: any) => {
 
   const startBatchLogoFetch = useCallback(async (tools: any[]) => {
     const reqId = ++logoBatchReqRef.current;
-    const urls = Array.from(new Set(
-      (tools || [])
-        .map((tool: any) => tool?.logo)
-        .filter((logo: any) => typeof logo === "string" && /^https?:\/\//i.test(logo.trim()))
-        .map((logo: string) => logo.trim())
-    ));
+    const urls = Array.from(
+      new Set(
+        (tools || [])
+          .map((tool: any) => tool?.logo)
+          .filter((logo: any) => typeof logo === "string" && /^https?:\/\//i.test(logo.trim()))
+          .map((logo: string) => logo.trim())
+      )
+    );
 
     if (!urls.length) {
       if (reqId === logoBatchReqRef.current) {
@@ -80,7 +110,7 @@ const Content = (props: any) => {
         }
       });
       setBatchLogoMap(nextMap);
-    } catch (error) {
+    } catch {
       if (reqId === logoBatchReqRef.current) {
         setBatchLogoMap({});
       }
@@ -90,9 +120,9 @@ const Content = (props: any) => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const r = await FetchList();
+      const r = await fetchHomeData();
       if (Array.isArray(r?.catelogs)) {
-        const allIndex = r.catelogs.indexOf("全部工具");
+        const allIndex = r.catelogs.indexOf(ALL_TOOLS_TAG);
         if (allIndex !== -1) {
           const allTag = r.catelogs.splice(allIndex, 1)[0];
           r.catelogs.push(allTag);
@@ -103,25 +133,21 @@ const Content = (props: any) => {
       startBatchLogoFetch(r?.tools || []);
 
       const tagInLocalStorage = window.localStorage.getItem("tag");
-      if (
-        tagInLocalStorage &&
-        tagInLocalStorage !== "" &&
-        r?.catelogs?.includes(tagInLocalStorage)
-      ) {
+      if (tagInLocalStorage && tagInLocalStorage !== "" && r?.catelogs?.includes(tagInLocalStorage)) {
         setCurrTag(tagInLocalStorage);
       } else {
         const defaultTag =
           Array.isArray(r?.catelogs) && r.catelogs.length > 0
-            ? r.catelogs.find((t) => t !== "全部工具") ?? r.catelogs[0]
-            : "默认";
+            ? r.catelogs.find((t) => t !== ALL_TOOLS_TAG) ?? r.catelogs[0]
+            : DEFAULT_TAG;
         setCurrTag(defaultTag);
       }
-    } catch (e) {
-      console.log(e);
+    } catch (error) {
+      console.error("加载首页数据失败:", error);
     } finally {
       setLoading(false);
     }
-  }, [setData, setLoading, setCurrTag, startBatchLogoFetch]);
+  }, [startBatchLogoFetch]);
 
   useEffect(() => {
     loadData();
@@ -133,7 +159,7 @@ const Content = (props: any) => {
         const cards = await generateSearchEngineCard(searchString);
         setSearchEngineCards(cards);
       } catch (error) {
-        console.error('加载搜索引擎卡片失败:', error);
+        console.error("加载搜索引擎卡片失败:", error);
         setSearchEngineCards([]);
       }
     };
@@ -143,7 +169,7 @@ const Content = (props: any) => {
 
   const handleSetCurrTag = (tag: string) => {
     setCurrTag(tag);
-    if (tag !== "管理后台") {
+    if (tag !== ADMIN_TAG) {
       window.localStorage.setItem("tag", tag);
     }
     resetSearch(true);
@@ -153,14 +179,14 @@ const Content = (props: any) => {
     setVal("");
     setSearchString("");
     const tagInLocalStorage = window.localStorage.getItem("tag");
-    if (!notSetTag && tagInLocalStorage && tagInLocalStorage !== "" && tagInLocalStorage !== "管理后台") {
+    if (!notSetTag && tagInLocalStorage && tagInLocalStorage !== "" && tagInLocalStorage !== ADMIN_TAG) {
       setCurrTag(tagInLocalStorage);
     }
   };
 
   const handleSetSearch = (nextVal: string) => {
     if (nextVal !== "" && nextVal) {
-      setCurrTag("全部工具");
+      setCurrTag(ALL_TOOLS_TAG);
       setSearchString(nextVal.trim());
     } else {
       resetSearch();
@@ -171,7 +197,7 @@ const Content = (props: any) => {
     if (data.tools) {
       const localResult = data.tools
         .filter((item: any) => {
-          if (currTag === "全部工具") {
+          if (currTag === ALL_TOOLS_TAG) {
             return true;
           }
           return item.catelog === currTag;
@@ -180,11 +206,7 @@ const Content = (props: any) => {
           if (searchString === "") {
             return true;
           }
-          return (
-            mutiSearch(item.name, searchString) ||
-            mutiSearch(item.desc, searchString) ||
-            mutiSearch(item.url, searchString)
-          );
+          return mutiSearch(item.name, searchString) || mutiSearch(item.desc, searchString) || mutiSearch(item.url, searchString);
         });
       return [...localResult, ...searchEngineCards];
     }
@@ -224,6 +246,27 @@ const Content = (props: any) => {
     };
   }, [filteredData, stopRenderRaf]);
 
+  const onKeyEnter = useCallback(
+    (ev: KeyboardEvent) => {
+      const cards = filteredDataRef.current;
+      if (ev.keyCode === 13 && cards?.length) {
+        window.open(cards[0]?.url, "_blank");
+        resetSearch();
+      }
+      if (ev.ctrlKey || ev.metaKey) {
+        const num = Number(ev.key);
+        if (isNaN(num)) return;
+        ev.preventDefault();
+        const index = Number(ev.key) - 1;
+        if (index >= 0 && index < cards.length) {
+          window.open(cards[index]?.url, "_blank");
+          resetSearch();
+        }
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     if (searchString.trim() === "") {
       document.removeEventListener("keydown", onKeyEnter);
@@ -233,12 +276,9 @@ const Content = (props: any) => {
     return () => {
       document.removeEventListener("keydown", onKeyEnter);
     };
-    // eslint-disable-next-line
-  }, [searchString]);
+  }, [searchString, onKeyEnter]);
 
-  const renderedCards = useMemo(() => {
-    return filteredData.slice(0, renderCount);
-  }, [filteredData, renderCount]);
+  const renderedCards = useMemo(() => filteredData.slice(0, renderCount), [filteredData, renderCount]);
 
   const renderCardsV2 = useCallback(() => {
     return renderedCards.map((item, index) => {
@@ -266,27 +306,7 @@ const Content = (props: any) => {
         />
       );
     });
-  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, batchLogoMap, loadData]);
-
-  const onKeyEnter = (ev: KeyboardEvent) => {
-    const cards = filteredDataRef.current;
-    if (ev.keyCode === 13) {
-      if (cards && cards.length) {
-        window.open(cards[0]?.url, "_blank");
-        resetSearch();
-      }
-    }
-    if (ev.ctrlKey || ev.metaKey) {
-      const num = Number(ev.key);
-      if (isNaN(num)) return;
-      ev.preventDefault();
-      const index = Number(ev.key) - 1;
-      if (index >= 0 && index < cards.length) {
-        window.open(cards[index]?.url, "_blank");
-        resetSearch();
-      }
-    }
-  };
+  }, [renderedCards, batchLogoMap, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, loadData]);
 
   const handleContentScroll = useCallback((ev: any) => {
     const nextShow = ev.currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
@@ -294,10 +314,7 @@ const Content = (props: any) => {
   }, []);
 
   const scrollToTop = useCallback(() => {
-    contentWrapperRef.current?.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    contentWrapperRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   const showClock = data?.siteConfig?.showClock ?? true;
@@ -306,17 +323,16 @@ const Content = (props: any) => {
     <>
       <Helmet>
         <meta charSet="utf-8" />
-        <link
-          rel="icon"
-          href={
-            data?.setting?.favicon ?? "/logo192.png"
-          }
-        />
+        <link rel="icon" href={data?.setting?.favicon ?? "/logo192.png"} />
         <title>{data?.setting?.title ?? "Van Nav"}</title>
       </Helmet>
       <div className="topbar">
+        {showClock && (
+          <div className="clock-row">
+            <LocalClock />
+          </div>
+        )}
         <div className="content">
-          {showClock && <LocalClock />}
           <SearchBar
             searchString={val}
             setSearchText={(t) => {
@@ -324,27 +340,29 @@ const Content = (props: any) => {
               handleSetSearch(t);
             }}
           />
-          <TagSelector
-            tags={data?.catelogs ?? ["全部工具"]}
-            currTag={currTag}
-            onTagChange={handleSetCurrTag}
-          />
+          <TagSelector tags={data?.catelogs ?? [ALL_TOOLS_TAG]} currTag={currTag} onTagChange={handleSetCurrTag} />
         </div>
       </div>
       <div className="content-wraper" onScroll={handleContentScroll} ref={contentWrapperRef}>
-        <div className={`content cards ${data?.siteConfig?.compactMode ? 'compact-grid' : ''}`}>
-          {loading ? <Loading></Loading> : renderCardsV2()}
+        <div className={`content cards ${data?.siteConfig?.compactMode ? "compact-grid" : ""}`}>
+          {loading ? <Loading /> : renderCardsV2()}
         </div>
       </div>
       {showBackTop && (
-        <button className="back-top-btn" onClick={scrollToTop} type="button" aria-label="scroll to top">
-          �ص�����
+        <button className="back-top-icon-btn" onClick={scrollToTop} type="button" aria-label="scroll to top">
+          <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
+            <path d="M12 7.4L6.2 13.2l1.4 1.4 4.4-4.4 4.4 4.4 1.4-1.4z" />
+          </svg>
         </button>
       )}
       <div className="record-wraper">
-        <a href="https://henniubi.com" target="_blank" rel="noreferrer">笔尖码动</a>
-        <br></br>
-        <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">{data?.setting?.govRecord ?? ""}</a>
+        <a href="https://henniubi.com" target="_blank" rel="noreferrer">
+          笔尖码动
+        </a>
+        <br />
+        <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">
+          {data?.setting?.govRecord ?? ""}
+        </a>
       </div>
       <DarkSwitch showGithub={showGithub} />
     </>

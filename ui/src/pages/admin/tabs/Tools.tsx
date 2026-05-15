@@ -434,7 +434,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
                     }}>
                       {" "}
                         <img
-                          src={`/api/img?url=${record.logo}`}
+                          src={`/api/img?url=${encodeURIComponent(record.logo)}`}
                           width={32}
                           height={32}
                           loading="lazy"
@@ -654,7 +654,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
             >
               <Select
                 options={getOptions(store?.catelogs || [])}
-                placeholder="请选���分类"
+                placeholder="请选择分类"
               />
             </Form.Item>
             <Form.Item name="desc" required label="描述" labelCol={{ span: 4 }}>
@@ -696,3 +696,5 @@ export const Tools: React.FC<ToolsProps> = (props) => {
     </Card>
   );
 };
+
+

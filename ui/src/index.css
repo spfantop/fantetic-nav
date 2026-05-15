@@ -62,9 +62,6 @@ input:focus-visible {
   background-color: #3d3d3d;
   border: 1px solid #3d3d3d;
 }
-body.dark-mode .card-box {
-  background-color: #222222;
-}
 body.dark-mode .card-box:hover {
   box-shadow: 2px 2px 12px 0px #292929;
 }

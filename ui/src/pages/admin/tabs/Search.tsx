@@ -121,7 +121,7 @@ const SearchEngineManager: React.FC = () => {
       width: 80,
       render: (logo: string, record: SearchEngine) => (
         <Image 
-          src={logo.startsWith('http') ? logo : `/api/img?url=${logo}`} 
+          src={logo.startsWith('http') ? logo : `/api/img?url=${encodeURIComponent(logo)}`} 
           alt={record.name} 
           width={24} 
           height={24}
