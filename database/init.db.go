@@ -172,17 +172,21 @@ func InitDB() {
 		CREATE TABLE IF NOT EXISTS nav_site_config (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			noImageMode BOOLEAN NOT NULL DEFAULT 0,
-			compactMode BOOLEAN NOT NULL DEFAULT 0
+			compactMode BOOLEAN NOT NULL DEFAULT 0,
+			showClock BOOLEAN NOT NULL DEFAULT 1
 		);
 		`
 	_, err = DB.Exec(sql_create_table)
 	utils.CheckErr(err)
-	
+
 	// 网站配置表结构升级 - 添加compactMode列
 	if !columnExists("nav_site_config", "compactMode") {
 		DB.Exec(`ALTER TABLE nav_site_config ADD COLUMN compactMode BOOLEAN NOT NULL DEFAULT 0;`)
 	}
-	
+	if !columnExists("nav_site_config", "showClock") {
+		DB.Exec(`ALTER TABLE nav_site_config ADD COLUMN showClock BOOLEAN NOT NULL DEFAULT 1;`)
+	}
+
 	// 如果不存在，就初始化默认搜索引擎
 	sql_get_search_engine := `
 		SELECT COUNT(*) FROM nav_search_engine;
@@ -203,7 +207,7 @@ func InitDB() {
 			{"Bing", "https://cn.bing.com/search", "q", "bing.ico", 2},
 			{"Google", "https://www.google.com/search", "q", "google.ico", 3},
 		}
-		
+
 		sql_add_search_engine := `
 			INSERT INTO nav_search_engine (name, baseUrl, queryParam, logo, sort, enabled)
 			VALUES (?, ?, ?, ?, ?, ?);
@@ -211,14 +215,14 @@ func InitDB() {
 		stmt, err := DB.Prepare(sql_add_search_engine)
 		utils.CheckErr(err)
 		defer stmt.Close()
-		
+
 		for _, engine := range defaultEngines {
 			_, err = stmt.Exec(engine.name, engine.baseUrl, engine.queryParam, engine.logo, engine.sort, true)
 			utils.CheckErr(err)
 		}
 		logger.LogInfo("默认搜索引擎初始化成功")
 	}
-	
+
 	// 如果不存在，就初始化用户
 	sql_get_user := `
 		SELECT * FROM nav_user;
@@ -266,12 +270,12 @@ func InitDB() {
 	utils.CheckErr(err)
 	if !rows.Next() {
 		sql_add_site_config := `
-			INSERT INTO nav_site_config (noImageMode, compactMode)
-			VALUES (?, ?);
+			INSERT INTO nav_site_config (noImageMode, compactMode, showClock)
+			VALUES (?, ?, ?);
 			`
 		stmt, err := DB.Prepare(sql_add_site_config)
 		utils.CheckErr(err)
-		res, err := stmt.Exec(false, false)
+		res, err := stmt.Exec(false, false, true)
 		utils.CheckErr(err)
 		_, err = res.LastInsertId()
 		utils.CheckErr(err)
@@ -295,7 +299,7 @@ func cleanupEmptyCategories() {
 		logger.LogInfo("清理空分类记录时出错: %v", err)
 		return
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err == nil && rowsAffected > 0 {
 		logger.LogInfo("已清理 %d 条空分类记录", rowsAffected)

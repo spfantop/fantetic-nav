@@ -168,6 +168,11 @@ export const fetchGetEnabledSearchEngines = async () => {
     return data?.data || [];
 };
 
+export const fetchBatchLogos = async (urls: string[]) => {
+    const { data } = await axios.post(`/api/img/batch`, { urls });
+    return data?.data || {};
+};
+
 // 添加搜索引擎
 export const fetchAddSearchEngine = async (payload: any) => {
     const { data } = await axios.post(`/api/admin/searchEngine`, payload);

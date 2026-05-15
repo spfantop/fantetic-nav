@@ -761,3 +761,73 @@ body.dark-mode .content.compact-grid .card-box:hover {
 }
 
 
+
+.local-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  color: #272e3b;
+}
+
+.local-clock-time {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+.local-clock-date {
+  margin-top: 4px;
+  font-size: 13px;
+  color: #86909c;
+}
+
+body.dark-mode .local-clock {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+body.dark-mode .local-clock-date {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.back-top-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 128px;
+  z-index: 20;
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12px;
+  line-height: 1;
+  background: rgba(39, 46, 59, 0.86);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+}
+
+.back-top-btn:hover {
+  background: rgba(39, 46, 59, 1);
+}
+
+body.dark-mode .back-top-btn {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .back-top-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@media (max-width: 700px) {
+  .local-clock {
+    display: none;
+  }
+
+  .back-top-btn {
+    right: 12px;
+    bottom: 94px;
+    padding: 7px 12px;
+  }
+}

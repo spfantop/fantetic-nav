@@ -1,8 +1,9 @@
 import React, { Suspense, useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { App as AntApp } from 'antd';
 import { Spin } from 'antd';
 import { decodeTheme, initTheme } from './utils/theme';
+import { isLogin } from './utils/check';
 import './App.css';
 
 const Home = React.lazy(() => import('./pages/Home'));
@@ -13,6 +14,13 @@ const Catelog = React.lazy(() => import('./pages/admin/tabs/Catelog').then(m => 
 const ApiToken = React.lazy(() => import('./pages/admin/tabs/ApiToken').then(m => ({ default: m.ApiToken })));
 const Setting = React.lazy(() => import('./pages/admin/tabs/Setting').then(m => ({ default: m.Setting })));
 const SearchEngine = React.lazy(() => import('./pages/admin/tabs/Search')) ;
+
+const RequireAuth = ({ children }: { children: JSX.Element }) => {
+    if (!isLogin()) {
+        return <Navigate to="/login" replace />;
+    }
+    return children;
+};
 
 // 统一管理页面级背景色，保证亮色主题始终使用稳定的自然浅色而不是动态壁纸。
 const getPageBackgroundColor = (isDarkMode: boolean) => (isDarkMode ? '#121212' : '#f5f1e8');
@@ -95,7 +103,14 @@ function App() {
                         <Routes>
                             <Route path="/" element={<Home />} />
                             <Route path="/login" element={<Login />} />
-                            <Route path="/admin" element={<AdminPage />}>
+                            <Route
+                                path="/admin"
+                                element={
+                                    <RequireAuth>
+                                        <AdminPage />
+                                    </RequireAuth>
+                                }
+                            >
                                 <Route index element={<Tools />} />
                                 <Route path="tools" element={<Tools />} />
                                 <Route path="categories" element={<Catelog />} />

@@ -10,7 +10,6 @@ import {
   TableIcon,
   MagnifyingGlassIcon,
 } from '@radix-ui/react-icons';
-import { useOnce } from '../../utils/useOnce';
 
 const menuItems: MenuItem[] = [
   {
@@ -50,12 +49,6 @@ export const AdminPage = () => {
   const navigate = useNavigate();
   const [currentKey, setCurrentKey] = useState('tools');
 
-  useOnce(() => {
-    if (!localStorage.getItem('_token')) {
-      navigate('/login');
-    }
-  }, []);
-
   // 根据当前路径设置选中的菜单项
   useEffect(() => {
     const pathname = location.pathname;
@@ -65,7 +58,7 @@ export const AdminPage = () => {
     }
   }, [location]);
 
-  // 处理退出登录
+  // 处理退出登�?
   const handleLogout = () => {
     localStorage.removeItem('_token');
     navigate('/');
@@ -94,7 +87,7 @@ export const AdminPage = () => {
                 className="flex items-center px-3 py-2 text-sm text-gray-700 hover:text-gray-900"
               >
                 <ExitIcon className="w-4 h-4 mr-2" />
-                退出登录
+                退出登�?
               </button>
             </div>
           </div>
@@ -117,4 +110,4 @@ export const AdminPage = () => {
   );
 };
 
-export default AdminPage; 
+export default AdminPage;

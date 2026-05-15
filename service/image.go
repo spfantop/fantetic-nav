@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net/url"
 	"strings"
 
@@ -102,4 +103,70 @@ func UpdateImg(url1 string) {
 		_, err = stmt.Exec(urlEncoded, base64ImgValue)
 		utils.CheckErr(err)
 	}
+}
+
+func GetImgsFromDB(urls []string) map[string]types.Img {
+	result := make(map[string]types.Img)
+	if len(urls) == 0 {
+		return result
+	}
+
+	encodedToOriginal := make(map[string]string)
+	encodedURLs := make([]string, 0, len(urls))
+	for _, rawURL := range urls {
+		trimmed := strings.TrimSpace(rawURL)
+		if trimmed == "" {
+			continue
+		}
+		encoded := url.QueryEscape(trimmed)
+		if _, exists := encodedToOriginal[encoded]; exists {
+			continue
+		}
+		encodedToOriginal[encoded] = trimmed
+		encodedURLs = append(encodedURLs, encoded)
+	}
+	if len(encodedURLs) == 0 {
+		return result
+	}
+
+	const chunkSize = 400
+	for start := 0; start < len(encodedURLs); start += chunkSize {
+		end := start + chunkSize
+		if end > len(encodedURLs) {
+			end = len(encodedURLs)
+		}
+		chunk := encodedURLs[start:end]
+		placeholders := strings.TrimRight(strings.Repeat("?,", len(chunk)), ",")
+		query := fmt.Sprintf("SELECT url, value FROM nav_img WHERE url IN (%s);", placeholders)
+
+		args := make([]any, 0, len(chunk))
+		for _, encodedURL := range chunk {
+			args = append(args, encodedURL)
+		}
+
+		rows, err := database.DB.Query(query, args...)
+		utils.CheckErr(err)
+		for rows.Next() {
+			var encodedURL string
+			var value string
+			err = rows.Scan(&encodedURL, &value)
+			utils.CheckErr(err)
+
+			originalURL, exists := encodedToOriginal[encodedURL]
+			if !exists {
+				decoded, decodeErr := url.QueryUnescape(encodedURL)
+				if decodeErr != nil {
+					continue
+				}
+				originalURL = decoded
+			}
+			result[originalURL] = types.Img{
+				Url:   originalURL,
+				Value: value,
+			}
+		}
+		rows.Close()
+	}
+
+	return result
 }

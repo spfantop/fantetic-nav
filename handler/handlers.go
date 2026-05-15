@@ -15,6 +15,28 @@ import (
 	"github.com/mereith/nav/utils"
 )
 
+type GetLogoBatchReq struct {
+	Urls []string `json:"urls"`
+}
+
+func detectImageContentType(rawURL string) string {
+	urlLower := strings.ToLower(rawURL)
+	switch {
+	case strings.Contains(urlLower, ".svg"):
+		return "image/svg+xml"
+	case strings.Contains(urlLower, ".png"):
+		return "image/png"
+	case strings.Contains(urlLower, ".jpg"), strings.Contains(urlLower, ".jpeg"):
+		return "image/jpeg"
+	case strings.Contains(urlLower, ".webp"):
+		return "image/webp"
+	case strings.Contains(urlLower, ".gif"):
+		return "image/gif"
+	default:
+		return "image/x-icon"
+	}
+}
+
 func ExportToolsHandler(c *gin.Context) {
 	tools := service.GetAllTool()
 	c.JSON(200, gin.H{
@@ -232,6 +254,39 @@ func GetLogoImgHandler(c *gin.Context) {
 	}
 	// 直接输出二进制数据，避免string转换导致的内存多分配
 	c.Data(http.StatusOK, t, imgBuffer)
+}
+
+func GetLogoImgBatchHandler(c *gin.Context) {
+	var req GetLogoBatchReq
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success":      false,
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+
+	if len(req.Urls) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"data":    map[string]any{},
+		})
+		return
+	}
+
+	imgs := service.GetImgsFromDB(req.Urls)
+	result := make(map[string]any, len(imgs))
+	for originalURL, img := range imgs {
+		result[originalURL] = gin.H{
+			"mime":   detectImageContentType(originalURL),
+			"base64": img.Value,
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    result,
+	})
 }
 
 func GetAdminAllDataHandler(c *gin.Context) {
@@ -570,7 +625,7 @@ func AddSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	id, err := database.AddSearchEngine(engine)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -579,7 +634,7 @@ func AddSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "添加搜索引擎成功",
@@ -600,7 +655,7 @@ func UpdateSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	// 从URL参数获取ID
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -612,7 +667,7 @@ func UpdateSearchEngineHandler(c *gin.Context) {
 		return
 	}
 	engine.Id = id
-	
+
 	err = database.UpdateSearchEngine(engine)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -621,7 +676,7 @@ func UpdateSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "更新搜索引擎成功",
@@ -639,7 +694,7 @@ func DeleteSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	err = database.DeleteSearchEngine(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -648,7 +703,7 @@ func DeleteSearchEngineHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "删除搜索引擎成功",
@@ -669,7 +724,7 @@ func UpdateSearchEngineSortHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	err = database.UpdateSearchEngineSort(sortData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -678,7 +733,7 @@ func UpdateSearchEngineSortHandler(c *gin.Context) {
 		})
 		return
 	}
-	
+
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "更新排序成功",

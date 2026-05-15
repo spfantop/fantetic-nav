@@ -79,10 +79,11 @@ func main() {
 		api.POST("/login", handler.LoginHandler)
 		api.GET("/logout", handler.LogoutHandler)
 		api.GET("/img", handler.GetLogoImgHandler)
-		
+		api.POST("/img/batch", handler.GetLogoImgBatchHandler)
+
 		// 获取启用的搜索引擎（公开接口）
 		api.GET("/searchEngines", handler.GetEnabledSearchEnginesHandler)
-		
+
 		// 管理员用的
 		admin := api.Group("/admin")
 		admin.Use(middleware.JWTMiddleware())
@@ -109,7 +110,7 @@ func main() {
 			admin.POST("/catelog", handler.AddCatelogHandler)
 			admin.DELETE("/catelog/:id", handler.DeleteCatelogHandler)
 			admin.PUT("/catelog/:id", handler.UpdateCatelogHandler)
-			
+
 			// 搜索引擎管理路由
 			admin.GET("/searchEngine", handler.GetAllSearchEnginesHandler)
 			admin.POST("/searchEngine", handler.AddSearchEngineHandler)

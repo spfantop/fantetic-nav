@@ -4,14 +4,17 @@ import SearchBar from "../SearchBar";
 import { Loading } from "../Loading";
 import { Helmet } from "react-helmet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FetchList } from "../../utils/api";
+import { FetchList, fetchBatchLogos } from "../../utils/api";
 import TagSelector from "../TagSelector";
 import pinyin from "pinyin-match";
-import GithubLink from "../GithubLink";
 import DarkSwitch from "../DarkSwitch";
-import { isLogin } from "../../utils/check";
 import { generateSearchEngineCard } from "../../utils/serachEngine";
 import { toggleJumpTarget } from "../../utils/setting";
+import LocalClock from "./LocalClock";
+
+const FRAME_INITIAL_COUNT = 48;
+const FRAME_BATCH_COUNT = 48;
+const BACK_TO_TOP_THRESHOLD = 300;
 
 const mutiSearch = (s, t) => {
   const source = (s as string).toLowerCase();
@@ -28,19 +31,66 @@ const Content = (props: any) => {
   const [searchString, setSearchString] = useState("");
   const [val, setVal] = useState("");
   const [searchEngineCards, setSearchEngineCards] = useState<any[]>([]);
+  const [batchLogoMap, setBatchLogoMap] = useState<Record<string, string>>({});
+  const [renderCount, setRenderCount] = useState(FRAME_INITIAL_COUNT);
+  const [showBackTop, setShowBackTop] = useState(false);
 
   const filteredDataRef = useRef<any>([]);
+  const renderRafRef = useRef<number | null>(null);
+  const logoBatchReqRef = useRef(0);
+  const contentWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const showGithub = useMemo(() => {
-    const hide = data?.setting?.hideGithub === true
+    const hide = data?.setting?.hideGithub === true;
     return !hide;
-  }, [data])
-  
+  }, [data]);
+
+  const stopRenderRaf = useCallback(() => {
+    if (renderRafRef.current !== null) {
+      window.cancelAnimationFrame(renderRafRef.current);
+      renderRafRef.current = null;
+    }
+  }, []);
+
+  const startBatchLogoFetch = useCallback(async (tools: any[]) => {
+    const reqId = ++logoBatchReqRef.current;
+    const urls = Array.from(new Set(
+      (tools || [])
+        .map((tool: any) => tool?.logo)
+        .filter((logo: any) => typeof logo === "string" && /^https?:\/\//i.test(logo.trim()))
+        .map((logo: string) => logo.trim())
+    ));
+
+    if (!urls.length) {
+      if (reqId === logoBatchReqRef.current) {
+        setBatchLogoMap({});
+      }
+      return;
+    }
+
+    try {
+      const result = await fetchBatchLogos(urls);
+      if (reqId !== logoBatchReqRef.current) {
+        return;
+      }
+      const nextMap: Record<string, string> = {};
+      Object.entries(result || {}).forEach(([url, item]: [string, any]) => {
+        if (item?.base64 && item?.mime) {
+          nextMap[url] = `data:${item.mime};base64,${item.base64}`;
+        }
+      });
+      setBatchLogoMap(nextMap);
+    } catch (error) {
+      if (reqId === logoBatchReqRef.current) {
+        setBatchLogoMap({});
+      }
+    }
+  }, []);
+
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const r = await FetchList();
-      // 把“全部工具”放到最后一个
       if (Array.isArray(r?.catelogs)) {
         const allIndex = r.catelogs.indexOf("全部工具");
         if (allIndex !== -1) {
@@ -49,20 +99,21 @@ const Content = (props: any) => {
         }
       }
       setData(r);
-      // 优先读取本地保存的 tag
+      setBatchLogoMap({});
+      startBatchLogoFetch(r?.tools || []);
+
       const tagInLocalStorage = window.localStorage.getItem("tag");
       if (
-          tagInLocalStorage &&
-          tagInLocalStorage !== "" &&
-          r?.catelogs?.includes(tagInLocalStorage)
+        tagInLocalStorage &&
+        tagInLocalStorage !== "" &&
+        r?.catelogs?.includes(tagInLocalStorage)
       ) {
         setCurrTag(tagInLocalStorage);
       } else {
-        // 没有本地记录时默认选第一个分类（但不是“全部工具”）
         const defaultTag =
-            Array.isArray(r?.catelogs) && r.catelogs.length > 0
-                ? r.catelogs.find((t) => t !== "全部工具") ?? r.catelogs[0]
-                : "默认";
+          Array.isArray(r?.catelogs) && r.catelogs.length > 0
+            ? r.catelogs.find((t) => t !== "全部工具") ?? r.catelogs[0]
+            : "默认";
         setCurrTag(defaultTag);
       }
     } catch (e) {
@@ -70,13 +121,12 @@ const Content = (props: any) => {
     } finally {
       setLoading(false);
     }
-  }, [setData, setLoading, setCurrTag]);
-  
+  }, [setData, setLoading, setCurrTag, startBatchLogoFetch]);
+
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // 异步加载搜索引擎卡片
   useEffect(() => {
     const loadSearchEngineCards = async () => {
       try {
@@ -93,7 +143,6 @@ const Content = (props: any) => {
 
   const handleSetCurrTag = (tag: string) => {
     setCurrTag(tag);
-    // 管理后台不记录了
     if (tag !== "管理后台") {
       window.localStorage.setItem("tag", tag);
     }
@@ -109,14 +158,14 @@ const Content = (props: any) => {
     }
   };
 
-  const handleSetSearch = (val: string) => {
-    if (val !== "" && val) {
+  const handleSetSearch = (nextVal: string) => {
+    if (nextVal !== "" && nextVal) {
       setCurrTag("全部工具");
-      setSearchString(val.trim());
+      setSearchString(nextVal.trim());
     } else {
       resetSearch();
     }
-  }
+  };
 
   const filteredData = useMemo(() => {
     if (data.tools) {
@@ -137,15 +186,43 @@ const Content = (props: any) => {
             mutiSearch(item.url, searchString)
           );
         });
-      return [...localResult, ...searchEngineCards]
-    } else {
-      return [...searchEngineCards];
+      return [...localResult, ...searchEngineCards];
     }
+    return [...searchEngineCards];
   }, [data, currTag, searchString, searchEngineCards]);
 
   useEffect(() => {
-    filteredDataRef.current = filteredData
-  }, [filteredData])
+    filteredDataRef.current = filteredData;
+  }, [filteredData]);
+
+  useEffect(() => {
+    stopRenderRaf();
+    const total = filteredData.length;
+    const initialCount = Math.min(FRAME_INITIAL_COUNT, total);
+    setRenderCount(initialCount);
+
+    if (total <= initialCount) {
+      return;
+    }
+
+    const appendNextFrame = () => {
+      setRenderCount((prev) => {
+        const next = Math.min(prev + FRAME_BATCH_COUNT, total);
+        if (next < total) {
+          renderRafRef.current = window.requestAnimationFrame(appendNextFrame);
+        } else {
+          renderRafRef.current = null;
+        }
+        return next;
+      });
+    };
+
+    renderRafRef.current = window.requestAnimationFrame(appendNextFrame);
+
+    return () => {
+      stopRenderRaf();
+    };
+  }, [filteredData, stopRenderRaf]);
 
   useEffect(() => {
     if (searchString.trim() === "") {
@@ -155,18 +232,24 @@ const Content = (props: any) => {
     }
     return () => {
       document.removeEventListener("keydown", onKeyEnter);
-    }
+    };
     // eslint-disable-next-line
-  }, [searchString])
+  }, [searchString]);
+
+  const renderedCards = useMemo(() => {
+    return filteredData.slice(0, renderCount);
+  }, [filteredData, renderCount]);
 
   const renderCardsV2 = useCallback(() => {
-    return filteredData.map((item, index) => {
+    return renderedCards.map((item, index) => {
+      const rawLogo = item?.logo;
+      const mappedLogo = typeof rawLogo === "string" ? batchLogoMap[rawLogo] || rawLogo : rawLogo;
       return (
         <CardV2
           title={item.name}
           url={item.url}
           des={item.desc}
-          logo={item.logo}
+          logo={mappedLogo}
           key={item.id}
           catelog={item.catelog}
           index={index}
@@ -183,31 +266,41 @@ const Content = (props: any) => {
         />
       );
     });
-    // eslint-disable-next-line
-  }, [filteredData, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode]);
+  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, batchLogoMap, loadData]);
 
   const onKeyEnter = (ev: KeyboardEvent) => {
     const cards = filteredDataRef.current;
-    // 使用 keyCode 防止与中文输入冲突
     if (ev.keyCode === 13) {
       if (cards && cards.length) {
         window.open(cards[0]?.url, "_blank");
         resetSearch();
       }
     }
-    // 如果按了数字键 + ctrl/meta，打开对应的卡片
     if (ev.ctrlKey || ev.metaKey) {
       const num = Number(ev.key);
       if (isNaN(num)) return;
-      ev.preventDefault()
+      ev.preventDefault();
       const index = Number(ev.key) - 1;
       if (index >= 0 && index < cards.length) {
         window.open(cards[index]?.url, "_blank");
         resetSearch();
       }
     }
-
   };
+
+  const handleContentScroll = useCallback((ev: any) => {
+    const nextShow = ev.currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
+    setShowBackTop((prev) => (prev === nextShow ? prev : nextShow));
+  }, []);
+
+  const scrollToTop = useCallback(() => {
+    contentWrapperRef.current?.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }, []);
+
+  const showClock = data?.siteConfig?.showClock ?? true;
 
   return (
     <>
@@ -216,13 +309,14 @@ const Content = (props: any) => {
         <link
           rel="icon"
           href={
-            data?.setting?.favicon ?? "favicon.ico"
+            data?.setting?.favicon ?? "/logo192.png"
           }
         />
         <title>{data?.setting?.title ?? "Van Nav"}</title>
       </Helmet>
       <div className="topbar">
         <div className="content">
+          {showClock && <LocalClock />}
           <SearchBar
             searchString={val}
             setSearchText={(t) => {
@@ -237,17 +331,21 @@ const Content = (props: any) => {
           />
         </div>
       </div>
-      <div className="content-wraper">
+      <div className="content-wraper" onScroll={handleContentScroll} ref={contentWrapperRef}>
         <div className={`content cards ${data?.siteConfig?.compactMode ? 'compact-grid' : ''}`}>
           {loading ? <Loading></Loading> : renderCardsV2()}
         </div>
       </div>
+      {showBackTop && (
+        <button className="back-top-btn" onClick={scrollToTop} type="button" aria-label="scroll to top">
+          �ص�����
+        </button>
+      )}
       <div className="record-wraper">
         <a href="https://henniubi.com" target="_blank" rel="noreferrer">笔尖码动</a>
         <br></br>
         <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">{data?.setting?.govRecord ?? ""}</a>
       </div>
-      {/*{showGithub && <GithubLink />}*/}
       <DarkSwitch showGithub={showGithub} />
     </>
   );
