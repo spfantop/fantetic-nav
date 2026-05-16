@@ -1,28 +1,36 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ConfigProvider } from 'antd'; // 引入 ConfigProvider
+import { ConfigProvider, theme } from 'antd';
 import './index.css';
 import App from './App';
-import * as serviceWorker from "./serviceWorker";
+import * as serviceWorker from './serviceWorker';
 
-// 1️⃣ 获取 root 容器
 const container = document.getElementById('root');
 const root = createRoot(container!);
 
-// 2️⃣ 渲染
 root.render(
-    <React.StrictMode>
-        <ConfigProvider
-            theme={{
-                token: {
-                    fontFamily: '"LXGW WenKai", sans-serif',
-                },
-            }}
-        >
-            <App />
-        </ConfigProvider>
-    </React.StrictMode>
+  <React.StrictMode>
+    <ConfigProvider
+      theme={{
+        algorithm: theme.darkAlgorithm,
+        token: {
+          fontFamily: '"LXGW WenKai", sans-serif',
+          colorPrimary: '#6f6f6f',
+          colorInfo: '#6f6f6f',
+          colorSuccess: '#6f6f6f',
+          colorWarning: '#6a6a6a',
+          colorError: '#7a4a4a',
+          colorBgBase: '#121212',
+          colorBgContainer: '#1f1f1f',
+          colorBorder: '#383838',
+          colorTextBase: '#f1f1f1',
+        },
+      }}
+    >
+      <App />
+    </ConfigProvider>
+  </React.StrictMode>
 );
 
-// 3️⃣ 注册 Service Worker
 serviceWorker.register(null);
+

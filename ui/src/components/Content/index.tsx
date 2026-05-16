@@ -7,7 +7,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FetchList, fetchBatchLogos } from "../../utils/api";
 import TagSelector from "../TagSelector";
 import pinyin from "pinyin-match";
-import DarkSwitch from "../DarkSwitch";
 import { generateSearchEngineCard } from "../../utils/serachEngine";
 import { toggleJumpTarget } from "../../utils/setting";
 import LocalClock from "./LocalClock";
@@ -68,10 +67,6 @@ const Content = () => {
   const logoBatchReqRef = useRef(0);
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);
 
-  const showGithub = useMemo(() => {
-    const hide = data?.setting?.hideGithub === true;
-    return !hide;
-  }, [data]);
 
   const stopRenderRaf = useCallback(() => {
     if (renderRafRef.current !== null) {
@@ -364,9 +359,11 @@ const Content = () => {
           {data?.setting?.govRecord ?? ""}
         </a>
       </div>
-      <DarkSwitch showGithub={showGithub} />
     </>
   );
 };
 
 export default Content;
+
+
+

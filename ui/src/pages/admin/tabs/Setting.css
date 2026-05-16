@@ -1,22 +1,22 @@
 .admin-setting-page {
   min-height: 100%;
   padding: 8px;
-  background: #0f141d;
+  background: #121212;
 }
 
 .admin-setting-card.ant-card {
-  border: 1px solid #2a3242 !important;
+  border: 1px solid #303030 !important;
   border-radius: 12px !important;
-  background: #171d28 !important;
+  background: #1f1f1f !important;
 }
 
 .admin-setting-card .ant-card-head,
 .admin-setting-card .ant-card-body {
-  background: #171d28 !important;
+  background: #1f1f1f !important;
 }
 
 .admin-setting-card .ant-card-head {
-  border-bottom: 1px solid #2a3242 !important;
+  border-bottom: 1px solid #303030 !important;
 }
 
 .admin-setting-page .ant-card-head-title,
@@ -25,74 +25,75 @@
 .admin-setting-page .ant-form-item-tooltip,
 .admin-setting-page .ant-select-selection-item,
 .admin-setting-page .ant-select-selection-placeholder {
-  color: #dce3f1 !important;
+  color: #e0e0e0 !important;
 }
 
 .admin-setting-page .ant-input,
 .admin-setting-page .ant-input-password,
 .admin-setting-page .ant-select-selector,
 .admin-setting-page .ant-input-affix-wrapper {
-  color: #dce3f1 !important;
-  background: #232c3b !important;
-  border-color: #3a465d !important;
+  color: #e0e0e0 !important;
+  background: #2a2a2a !important;
+  border-color: #383838 !important;
 }
 
 .admin-setting-page .ant-input::placeholder,
 .admin-setting-page .ant-input-password input::placeholder {
-  color: #9aa8c3 !important;
+  color: #a8a8a8 !important;
 }
 
 .admin-setting-page .ant-input:focus,
 .admin-setting-page .ant-input-affix-wrapper-focused,
 .admin-setting-page .ant-select-focused .ant-select-selector {
-  border-color: #5f85ff !important;
-  box-shadow: 0 0 0 2px rgba(95, 133, 255, 0.22) !important;
+  border-color: #7a7a7a !important;
+  box-shadow: 0 0 0 2px rgba(122, 122, 122, 0.28) !important;
 }
 
 .admin-setting-page .ant-select-dropdown,
 .admin-setting-page .ant-select-item,
 .admin-setting-page .ant-select-item-option-content {
-  background: #1d2431 !important;
-  color: #dce3f1 !important;
+  background: #242424 !important;
+  color: #e0e0e0 !important;
 }
 
 .admin-setting-select-popup.ant-select-dropdown {
-  background: #1d2431 !important;
-  border: 1px solid #2a3242 !important;
+  background: #242424 !important;
+  border: 1px solid #303030 !important;
 }
 
 .admin-setting-select-popup .ant-select-item-option-content,
 .admin-setting-select-popup .ant-select-item {
-  color: #dce3f1 !important;
+  color: #e0e0e0 !important;
 }
 
 .admin-setting-select-popup .ant-select-item-option-active:not(.ant-select-item-option-disabled) {
-  background: #2a3344 !important;
+  background: #303030 !important;
 }
 
 .admin-setting-select-popup .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   color: #ffffff !important;
-  background: #334161 !important;
+  background: #383838 !important;
 }
 
 .admin-setting-page .ant-switch {
-  background: #4a556b;
+  background: #505050;
 }
 
 .admin-setting-page .ant-switch-checked {
-  background: #5f85ff !important;
+  background: #6f6f6f !important;
 }
 
 .admin-setting-page .ant-btn-primary {
-  background: #4f74ff !important;
-  border-color: #4f74ff !important;
+  background: #6f6f6f !important;
+  border-color: #7a7a7a !important;
 }
 
 .admin-setting-page .ant-btn-primary:hover {
-  background: #5e82ff !important;
-  border-color: #5e82ff !important;
+  background: #868686 !important;
+  border-color: #868686 !important;
 }
 
 .admin-setting-page .ant-spin-dot-item {
-  background: #7f9bff !important;
+  background: #888888 !important;
 }
+

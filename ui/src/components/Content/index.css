@@ -15,17 +15,6 @@
     width: 22px;
     height: 22px;
   }
-  .theme-switch-box {
-    right: 10px;
-    bottom: 40px;
-  }
-    .theme-switch-box.hide-github {
-    bottom: 10px;
-   }
-  .theme-switch-box svg {
-    width: 24px;
-    height: 24px;
-  }
   .select-tag {
     font-size: 13px;
     padding: 2px 6px;
@@ -42,25 +31,25 @@
     margin-right: -6px;
   }
   input:hover {
-    background-color: #e5e6eb;
-    border: 1px solid #e5e6eb;
+    background-color: #303030;
+    border: 1px solid #303030;
     cursor: pointer;
   }
   input:focus,
   input:focus-visible {
-    background-color: #ffffff;
-    border: 1px solid #272e3b;
-    color: #272e3b;
+    background-color: #1f1f1f;
+    border: 1px solid #d0d0d0;
+    color: #d0d0d0;
   }
   input {
     height: 30px;
     font-size: 16px;
     padding: 0 16px;
     border-radius: 4px;
-    border: 1px solid #f4f5f7;
-    background-color: #f4f5f7;
+    border: 1px solid #222222;
+    background-color: #222222;
     outline: none;
-    color: #8a92a6;
+    color: #b0b0b0;
   }
   .search {
     margin-bottom: 14px;
@@ -92,7 +81,7 @@
     transition: box-shadow, transform 0.3s;
     border-radius: 4px;
     padding: 0;
-    background-color: #ffffff;
+    background-color: #1f1f1f;
     text-decoration: none;
   }
   .card-content {
@@ -123,7 +112,7 @@
   }
   .card-right-title {
     display: inline-block;
-    color: #272e3b;
+    color: #d0d0d0;
     font-weight: 500;
     font-size: 12px;
     margin-top: 3px;
@@ -157,17 +146,6 @@
     width: 27px;
     height: 27px;
   }
-  .theme-switch-box {
-    right: 14px;
-    bottom: 46px;
-  }
-  .theme-switch-box.hide-github {
-    bottom: 15px;
-   }
-  .theme-switch-box svg {
-    width: 30px;
-    height: 30px;
-  }
   .select-tag {
     font-size: 13px;
     padding: 2px 8px;
@@ -184,25 +162,25 @@
     margin-right: -6px;
   }
   input:hover {
-    background-color: #e5e6eb;
-    border: 1px solid #e5e6eb;
+    background-color: #303030;
+    border: 1px solid #303030;
     cursor: pointer;
   }
   input:focus-visible,
   input:focus {
-    background-color: #ffffff;
-    border: 1px solid #272e3b;
-    color: #272e3b;
+    background-color: #1f1f1f;
+    border: 1px solid #d0d0d0;
+    color: #d0d0d0;
   }
   input {
     height: 36px;
     font-size: 16px;
     padding: 0 20px;
     border-radius: 4px;
-    border: 1px solid #f4f5f7;
-    background-color: #f4f5f7;
+    border: 1px solid #222222;
+    background-color: #222222;
     outline: none;
-    color: #8a92a6;
+    color: #b0b0b0;
   }
   .search {
     margin-bottom: 18px;
@@ -234,7 +212,7 @@
     transition: box-shadow, transform 0.3s;
     border-radius: 4px;
     padding: 0;
-    background-color: #ffffff;
+    background-color: #1f1f1f;
     text-decoration: none;
   }
   .card-content {
@@ -265,7 +243,7 @@
   }
   .card-right-title {
     display: inline-block;
-    color: #272e3b;
+    color: #d0d0d0;
     font-weight: 500;
     font-size: 14px;
     margin-top: 4px;
@@ -299,17 +277,6 @@
     width: 27px;
     height: 27px;
   }
-  .theme-switch-box {
-    right: 10px;
-    bottom: 50px;
-  }
-  .theme-switch-box.hide-github {
-    bottom: 20px;
-   }
-  .theme-switch-box svg {
-    width: 30px;
-    height: 30px;
-  }
   .select-tag {
     font-size: 13px;
     padding: 2px 10px;
@@ -325,24 +292,24 @@
     margin-right: -10px;
   }
   input:hover {
-    background-color: #e5e6eb;
-    border: 1px solid #e5e6eb;
+    background-color: #303030;
+    border: 1px solid #303030;
     cursor: pointer;
   }
   input:focus-visible,input:focus {
-    background-color: #ffffff;
-    border: 1px solid #272e3b;
-    color: #272e3b;
+    background-color: #1f1f1f;
+    border: 1px solid #d0d0d0;
+    color: #d0d0d0;
   }
   input {
     height: 40px;
     font-size: 16px;
     padding: 0 22px;
     border-radius: 4px;
-    border: 1px solid #f4f5f7;
-    background-color: #f4f5f7;
+    border: 1px solid #222222;
+    background-color: #222222;
     outline: none;
-    color: #8a92a6;
+    color: #b0b0b0;
   }
   .tag-selector {
     margin-bottom: 16px;
@@ -370,12 +337,12 @@
     transition: box-shadow, transform 0.3s;
     border-radius: 4px;
     padding: 9%;
-    background-color: #fafbfc;
+    background-color: #1f1f1f;
     text-decoration: none;
   }
   .card-box:hover {
     transform: translateY(-6px);
-      box-shadow: 6px 6px 12px 0px #eceef4;
+      box-shadow: 6px 6px 12px 0px #2b2b2b;
   }
   .card-content {
     flex: 1;
@@ -399,9 +366,9 @@
     display: none;
   }
   .card-tag {
-    color: #878a95;
+    color: #a8a8a8;
     font-size: 13px;
-    background-color: #fafbfc;
+    background-color: #1f1f1f;
     display: inline-block;
     box-sizing: border-box;
     padding: 0x;
@@ -418,7 +385,7 @@
   }
   .card-right-title {
     display: inline-block;
-    color: #272e3b;
+    color: #d0d0d0;
     font-size: 14px;
     margin-right: 7px;
     overflow: hidden;
@@ -449,18 +416,6 @@
     width: 35px;
     height: 35px;
   }
-  .theme-switch-box {
-    right: 10px;
-    bottom: 70px;
-  }
-   .theme-switch-box.hide-github {
-    bottom: 20px;
-   }
-
-  .theme-switch-box svg {
-    width: 40px;
-    height: 40px;
-  }
   .select-tag {
     font-size: 14px;
     padding: 2px 10px;
@@ -477,24 +432,24 @@
     margin-right: -16px;
   }
   input:hover {
-    background-color: #e5e6eb;
-      border: 1px solid #e5e6eb;
+    background-color: #303030;
+      border: 1px solid #303030;
       cursor: pointer;
   }
   input:focus,input:focus-visible {
-    background-color: #ffffff;
-    border: 1px solid #272e3b;
-    color: #272e3b;
+    background-color: #1f1f1f;
+    border: 1px solid #d0d0d0;
+    color: #d0d0d0;
   }
   input {
     height: 40px;
     font-size: 16px;
     padding: 0 32px;
     border-radius: 4px;
-    border: 1px solid #f4f5f7;
-    background-color: #f4f5f7;
+    border: 1px solid #222222;
+    background-color: #222222;
     outline: none;
-    color: #8a92a6;
+    color: #b0b0b0;
    
   }
   .content {
@@ -519,17 +474,17 @@
     transition: box-shadow, transform 0.3s;
     border-radius: 4px;
     padding: 9%;
-    background-color: #fafbfc;
+    background-color: #1f1f1f;
     text-decoration: none;
     max-width: 350px;
-  background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
-  backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+  background-color: rgba(255, 255, 255, 0); /* 闂佽皫鍐ｅ亾閻斿妫岄梺鍛婎殔閿曨亪鍩€椤掆偓缁绘垵危?*/
+  backdrop-filter: blur(10px); /* 濠殿噯绲剧粙鎾荤嵁閹剧粯鍋ｉ柛鎰ㄦ晹娴ｅ搫瀵插┑鐘插暞濞呭繘鏌?*/
   -webkit-backdrop-filter: blur(2px) saturate(120%);
-  border-radius: 16px; /* 圆角 */
+  border-radius: 16px; /* 闂侀潻绠戝Λ婊堬綖?*/
   }
   .card-box:hover {
     transform: translateY(-6px);
-      box-shadow: 6px 6px 12px 0px #eceef4;
+      box-shadow: 6px 6px 12px 0px #2b2b2b;
   }
   .card-content {
     flex: 1;
@@ -545,7 +500,7 @@
     width: 100%;
   }
   .card-right-bottom {
-    color: #86909c;
+    color: #b0b0b0;
     font-size: 13px;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -553,7 +508,7 @@
     overflow: hidden;
   }
   .card-tag {
-    color: #878a95;
+    color: #a8a8a8;
     font-size: 12px;
     display: inline-block;
     box-sizing: border-box;
@@ -571,7 +526,7 @@
   }
   .card-right-title {
     display: inline-block;
-    color: #272e3b;
+    color: #d0d0d0;
     font-size: 14px;
     font-weight: 500;
     margin-right: 7px;
@@ -622,7 +577,7 @@
   color: #bbb;
 }
 
-/* 精简模式样式 - 6列布局 */
+/* 缂備緡鍠栨晶浠嬫偩濠靛柈鐔煎灳瀹曞洨顢呴梺鍝勭Т閸㈣尙妲?- 6闂佸憡甯楅〃鍛博妞嬪簼娌柍?*/
 @media (min-width: 1060px) {
   .content.compact-grid {
     grid-template-columns: repeat(6, minmax(149px, 175px));
@@ -639,16 +594,16 @@
     height: 48px;
     display: flex;
     align-items: center;
-  background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
-  backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+  background-color: rgba(255, 255, 255, 0); /* 闂佽皫鍐ｅ亾閻斿妫岄梺鍛婎殔閿曨亪鍩€椤掆偓缁绘垵危?*/
+  backdrop-filter: blur(10px); /* 濠殿噯绲剧粙鎾荤嵁閹剧粯鍋ｉ柛鎰ㄦ晹娴ｅ搫瀵插┑鐘插暞濞呭繘鏌?*/
   -webkit-backdrop-filter: blur(2px) saturate(120%);
-  border-radius: 16px; /* 圆角 */
+  border-radius: 16px; /* 闂侀潻绠戝Λ婊堬綖?*/
   }
   
   .content.compact-grid .card-box:hover {
     transform: none;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    background-color: #f0f1f3;
+    background-color: #2a2a2a;
   }
 }
 
@@ -668,16 +623,16 @@
     height: 42px;
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
-    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    background-color: rgba(255, 255, 255, 0); /* 闂佽皫鍐ｅ亾閻斿妫岄梺鍛婎殔閿曨亪鍩€椤掆偓缁绘垵危?*/
+    backdrop-filter: blur(10px); /* 濠殿噯绲剧粙鎾荤嵁閹剧粯鍋ｉ柛鎰ㄦ晹娴ｅ搫瀵插┑鐘插暞濞呭繘鏌?*/
     -webkit-backdrop-filter: blur(2px) saturate(120%);
-    border-radius: 16px; /* 圆角 */
+    border-radius: 16px; /* 闂侀潻绠戝Λ婊堬綖?*/
   }
   
   .content.compact-grid .card-box:hover {
     transform: none;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    background-color: #f0f1f3;
+    background-color: #2a2a2a;
   }
 }
 
@@ -697,16 +652,16 @@
     height: 36px;
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
-    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    background-color: rgba(255, 255, 255, 0); /* 闂佽皫鍐ｅ亾閻斿妫岄梺鍛婎殔閿曨亪鍩€椤掆偓缁绘垵危?*/
+    backdrop-filter: blur(10px); /* 濠殿噯绲剧粙鎾荤嵁閹剧粯鍋ｉ柛鎰ㄦ晹娴ｅ搫瀵插┑鐘插暞濞呭繘鏌?*/
     -webkit-backdrop-filter: blur(2px) saturate(120%);
-    border-radius: 16px; /* 圆角 */
+    border-radius: 16px; /* 闂侀潻绠戝Λ婊堬綖?*/
   }
   
   .content.compact-grid .card-box:hover {
     transform: none;
     box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    background-color: #f0f1f3;
+    background-color: #2a2a2a;
   }
 }
 
@@ -726,25 +681,20 @@
     height: 32px;
     display: flex;
     align-items: center;
-    background-color: rgba(255, 255, 255, 0); /* 白色半透明 */
-    backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
+    background-color: rgba(255, 255, 255, 0); /* 闂佽皫鍐ｅ亾閻斿妫岄梺鍛婎殔閿曨亪鍩€椤掆偓缁绘垵危?*/
+    backdrop-filter: blur(10px); /* 濠殿噯绲剧粙鎾荤嵁閹剧粯鍋ｉ柛鎰ㄦ晹娴ｅ搫瀵插┑鐘插暞濞呭繘鏌?*/
     -webkit-backdrop-filter: blur(2px) saturate(120%);
-    border-radius: 16px; /* 圆角 */
+    border-radius: 16px; /* 闂侀潻绠戝Λ婊堬綖?*/
   }
   
   .content.compact-grid .card-box:hover {
     transform: none;
     box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    background-color: #f0f1f3;
+    background-color: #2a2a2a;
   }
 }
 
-/* 暗色模式下的精简模式样式 */
-
-body.dark-mode .content.compact-grid .card-box:hover {
-  background-color: #3a3a3a;
-  box-shadow: 0 2px 8px rgba(255,255,255,0.1);
-}
+/* 闂佸搫妫欓〃澶嬬珶婵犲伣鐔煎灳瀹曞洨顢呮繛鎴炴尭椤戝洤鈻撻幋鐘插灊闁告挆鍛畷濠碘槅鍨埀顒€纾涵鈧梺鍝勭Т閸㈣尙妲?*/
 
 
 
@@ -754,7 +704,7 @@ body.dark-mode .content.compact-grid .card-box:hover {
   align-items: center;
   justify-content: center;
   margin-bottom: 12px;
-  color: #272e3b;
+  color: #d0d0d0;
 }
 
 .local-clock-time {
@@ -767,54 +717,12 @@ body.dark-mode .content.compact-grid .card-box:hover {
 .local-clock-date {
   margin-top: 4px;
   font-size: 13px;
-  color: #86909c;
-}
-
-body.dark-mode .local-clock {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-body.dark-mode .local-clock-date {
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.back-top-btn {
-  position: fixed;
-  right: 18px;
-  bottom: 128px;
-  z-index: 20;
-  border: none;
-  border-radius: 999px;
-  padding: 8px 14px;
-  font-size: 12px;
-  line-height: 1;
-  background: rgba(39, 46, 59, 0.86);
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-}
-
-.back-top-btn:hover {
-  background: rgba(39, 46, 59, 1);
-}
-
-body.dark-mode .back-top-btn {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-body.dark-mode .back-top-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
+  color: #b0b0b0;
 }
 
 @media (max-width: 700px) {
   .local-clock {
     display: none;
-  }
-
-  .back-top-btn {
-    right: 12px;
-    bottom: 94px;
-    padding: 7px 12px;
   }
 }
 
@@ -851,23 +759,30 @@ body.dark-mode .back-top-btn:hover {
 
 .back-top-icon-btn {
   position: fixed;
-  right: 10px;
+  right: 14px;
   bottom: 118px;
   z-index: 20;
-  border: none;
-  background: transparent;
+  border: 1px solid #4a4a4a;
+  background: rgba(36, 36, 36, 0.88);
+  border-radius: 999px;
   cursor: pointer;
-  padding: 0;
+  padding: 4px;
   line-height: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
 }
 
 .back-top-icon-btn svg {
-  fill: #3d3d3d;
+  fill: #d9d9d9;
   transition: all 0.3s;
 }
 
+.back-top-icon-btn:hover {
+  background: rgba(52, 52, 52, 0.92);
+  border-color: #666666;
+}
+
 .back-top-icon-btn svg:hover {
-  fill: #121212;
+  fill: #ffffff;
 }
 
 @media (max-width: 500px) {
@@ -877,8 +792,8 @@ body.dark-mode .back-top-btn:hover {
   }
 
   .back-top-icon-btn svg {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
   }
 }
 
@@ -889,8 +804,8 @@ body.dark-mode .back-top-btn:hover {
   }
 
   .back-top-icon-btn svg {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
 }
 
@@ -901,19 +816,19 @@ body.dark-mode .back-top-btn:hover {
   }
 
   .back-top-icon-btn svg {
-    width: 30px;
-    height: 30px;
+    width: 24px;
+    height: 24px;
   }
 }
 
 @media (min-width: 1060px) {
   .back-top-icon-btn {
-    right: 10px;
+    right: max(14px, calc((100vw - min(1200px, 100vw)) / 2 + 8px));
     bottom: 110px;
   }
 
   .back-top-icon-btn svg {
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
   }
 }

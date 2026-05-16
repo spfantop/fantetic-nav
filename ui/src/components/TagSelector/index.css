@@ -1,6 +1,5 @@
-.select-tag {
+﻿.select-tag {
   cursor: pointer;
-  color: #8a92a6;
   border: 1px solid #979797;
   transition: all 0.3s;
   box-sizing: border-box;

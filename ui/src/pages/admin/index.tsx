@@ -63,25 +63,25 @@ export const AdminPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f141d] text-[#dce3f1]">
-      <header className="bg-[#171d28] border-b border-[#2a3242]">
+    <div className="admin-page-shell min-h-screen bg-[#121212] text-[#e0e0e0]">
+      <header className="bg-[#1f1f1f] border-b border-[#303030]">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-[#edf3ff]">Nav 管理系统</h1>
+              <h1 className="text-xl font-semibold text-[#f1f1f1]">Nav 管理系统</h1>
             </div>
 
             <div className="flex items-center space-x-4">
               <Link
                 to="/"
-                className="flex items-center px-3 py-2 text-sm text-[#c3d0e8] hover:text-[#ffffff]"
+                className="flex items-center px-3 py-2 text-sm text-[#cfcfcf] hover:text-[#ffffff]"
               >
                 <HomeIcon className="w-4 h-4 mr-2" />
                 返回主页
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center px-3 py-2 text-sm text-[#c3d0e8] hover:text-[#ffffff]"
+                className="flex items-center px-3 py-2 text-sm text-[#cfcfcf] hover:text-[#ffffff]"
               >
                 <ExitIcon className="w-4 h-4 mr-2" />
                 退出登录
@@ -94,7 +94,7 @@ export const AdminPage = () => {
       <div className="flex flex-1 w-full mx-auto h-[calc(100vh-64px)]">
         <Sidebar items={menuItems} currentKey={currentKey} onChange={setCurrentKey} />
 
-        <main className="flex-1 overflow-auto bg-[#0f141d]">
+        <main className="flex-1 overflow-auto bg-[#121212]">
           <div className="p-4 h-full">
             <Outlet />
           </div>

@@ -28,7 +28,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
 
   return (
     <div
-      className={`h-full bg-[#171d28] border-r border-[#2a3242] transition-all duration-300 relative ${
+      className={`h-full bg-[#1f1f1f] border-r border-[#303030] transition-all duration-300 relative ${
         expanded ? 'w-64' : 'w-20'
       }`}
     >
@@ -39,10 +39,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
             to={item.path}
             onClick={() => onChange(item.key)}
             className={`
-              flex items-center px-4 py-3 text-[#c3d0e8] hover:bg-[#232c3b] cursor-pointer no-underline
+              flex items-center px-4 py-3 text-[#cfcfcf] hover:bg-[#2a2a2a] cursor-pointer no-underline
               border-l-4
               ${(currentKey === item.key || location.pathname === item.path)
-                ? 'bg-[#232c3b] border-[#5f85ff] text-[#ffffff]'
+                ? 'bg-[#2a2a2a] border-[#8a8a8a] text-[#ffffff]'
                 : 'border-transparent'}
             `}
           >
@@ -52,11 +52,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
         ))}
         <button
           onClick={() => setExpanded(!expanded)}
-          className="absolute bottom-5 -right-3 p-2 hover:bg-[#232c3b] rounded-full
-          bg-[#171d28] border border-[#2a3242] shadow-sm z-50 w-6 h-6
-          flex items-center justify-center text-xs text-[#dce3f1]"
+          className="absolute bottom-5 -right-3 p-2 hover:bg-[#2a2a2a] rounded-full
+          bg-[#1f1f1f] border border-[#303030] shadow-sm z-50 w-6 h-6
+          flex items-center justify-center text-xs text-[#e0e0e0]"
         >
-          {expanded ? '←' : '→'}
+          {expanded ? '<' : '>'}
         </button>
 
         <a
@@ -66,7 +66,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
           className="
             absolute bottom-4 left-4
             flex items-center justify-start py-2
-            text-[#aab8d1] hover:text-[#ffffff]
+            text-[#a8a8a8] hover:text-[#ffffff]
           "
         >
           <svg height="24" width="24" viewBox="0 0 16 16" className="fill-current">
@@ -78,3 +78,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
     </div>
   );
 };
+
