@@ -18,6 +18,7 @@ const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
 const DEFAULT_TAG = "默认";
 const HOME_CACHE_TTL = 2000;
+const HOME_STORAGE_CACHE_KEY = "van_nav_home_cache_v1";
 
 let homeDataCache: any = null;
 let homeDataCacheAt = 0;
@@ -51,6 +52,42 @@ const fetchHomeData = async () => {
   return homeDataInFlight;
 };
 
+const readHomeStorageCache = () => {
+  try {
+    const raw = window.localStorage.getItem(HOME_STORAGE_CACHE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
+const writeHomeStorageCache = (payload: any) => {
+  try {
+    window.localStorage.setItem(HOME_STORAGE_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // 忽略缓存写入异常，避免影响主流程
+  }
+};
+
+const normalizeHomeData = (payload: any) => {
+  if (!payload || typeof payload !== "object") {
+    return payload;
+  }
+
+  const nextData = {
+    ...payload,
+    catelogs: Array.isArray(payload.catelogs) ? [...payload.catelogs] : [],
+    tools: Array.isArray(payload.tools) ? payload.tools : [],
+  };
+
+  const allIndex = nextData.catelogs.indexOf(ALL_TOOLS_TAG);
+  if (allIndex !== -1) {
+    const allTag = nextData.catelogs.splice(allIndex, 1)[0];
+    nextData.catelogs.push(allTag);
+  }
+  return nextData;
+};
+
 const Content = () => {
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -66,6 +103,19 @@ const Content = () => {
   const renderRafRef = useRef<number | null>(null);
   const logoBatchReqRef = useRef(0);
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);
+
+  const applyTagFromData = useCallback((nextData: any) => {
+    const tagInLocalStorage = window.localStorage.getItem("tag");
+    if (tagInLocalStorage && tagInLocalStorage !== "" && nextData?.catelogs?.includes(tagInLocalStorage)) {
+      setCurrTag(tagInLocalStorage);
+      return;
+    }
+    const defaultTag =
+      Array.isArray(nextData?.catelogs) && nextData.catelogs.length > 0
+        ? nextData.catelogs.find((t) => t !== ALL_TOOLS_TAG) ?? nextData.catelogs[0]
+        : DEFAULT_TAG;
+    setCurrTag(defaultTag);
+  }, []);
 
 
   const stopRenderRaf = useCallback(() => {
@@ -113,9 +163,20 @@ const Content = () => {
   }, []);
 
   const loadData = useCallback(async () => {
+    const localCacheData = normalizeHomeData(readHomeStorageCache());
+    if (localCacheData) {
+      setData(localCacheData);
+      setBatchLogoMap({});
+      startBatchLogoFetch(localCacheData?.tools || []);
+      applyTagFromData(localCacheData);
+      setLoading(false);
+    }
+
     try {
-      setLoading(true);
-      const r = await fetchHomeData();
+      if (!localCacheData) {
+        setLoading(true);
+      }
+      const r = normalizeHomeData(await fetchHomeData());
       if (Array.isArray(r?.catelogs)) {
         const allIndex = r.catelogs.indexOf(ALL_TOOLS_TAG);
         if (allIndex !== -1) {
@@ -124,6 +185,7 @@ const Content = () => {
         }
       }
       setData(r);
+      writeHomeStorageCache(r);
       setBatchLogoMap({});
       startBatchLogoFetch(r?.tools || []);
 
@@ -142,7 +204,7 @@ const Content = () => {
     } finally {
       setLoading(false);
     }
-  }, [startBatchLogoFetch]);
+  }, [applyTagFromData, startBatchLogoFetch]);
 
   useEffect(() => {
     loadData();
@@ -312,7 +374,7 @@ const Content = () => {
     contentWrapperRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const showClock = data?.siteConfig?.showClock ?? true;
+  const showClock = data?.siteConfig ? data.siteConfig.showClock !== false : false;
 
   return (
     <>

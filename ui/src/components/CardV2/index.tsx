@@ -1,22 +1,30 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import "./index.css";
 import { getLogoUrl } from "../../utils/check";
 import { getJumpTarget } from "../../utils/setting";
 
+const loadedImageSrcCache = new Set<string>();
+const failedImageSrcCache = new Set<string>();
+
 const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noImageMode, compactMode }) => {
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageError, setImageError] = useState(false);
-  const [showLoading, setShowLoading] = useState(true);
-  
   const imageSrc = useMemo(() => {
     return url === "admin" ? logo : getLogoUrl(logo);
   }, [logo, url]);
+  const [imageLoaded, setImageLoaded] = useState(() => loadedImageSrcCache.has(imageSrc));
+  const [imageError, setImageError] = useState(() => failedImageSrcCache.has(imageSrc));
+  const [showLoading, setShowLoading] = useState(() => !loadedImageSrcCache.has(imageSrc) && !failedImageSrcCache.has(imageSrc));
   
   // 当图片源变化时重置状态，并添加超时保护
   useEffect(() => {
-    setImageLoaded(false);
-    setImageError(false);
-    setShowLoading(true);
+    const loadedFromCache = loadedImageSrcCache.has(imageSrc);
+    const failedFromCache = failedImageSrcCache.has(imageSrc);
+    setImageLoaded(loadedFromCache);
+    setImageError(failedFromCache);
+    setShowLoading(!loadedFromCache && !failedFromCache);
+
+    if (loadedFromCache || failedFromCache) {
+      return;
+    }
     
     // 10秒超时保护
     const timeout = setTimeout(() => {
@@ -27,15 +35,19 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
     return () => clearTimeout(timeout);
   }, [imageSrc]);
   
-  const handleImageLoad = () => {
+  const handleImageLoad = useCallback(() => {
+    loadedImageSrcCache.add(imageSrc);
+    failedImageSrcCache.delete(imageSrc);
     setImageLoaded(true);
     setShowLoading(false);
-  };
+  }, [imageSrc]);
   
-  const handleImageError = () => {
+  const handleImageError = useCallback(() => {
+    failedImageSrcCache.add(imageSrc);
+    loadedImageSrcCache.delete(imageSrc);
     setImageError(true);
     setShowLoading(false);
-  };
+  }, [imageSrc]);
   
   const el = useMemo(() => {
     if (imageError) {
@@ -66,7 +78,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
         />
       </>
     );
-  }, [imageSrc, title, imageLoaded, imageError, showLoading]);
+  }, [imageSrc, title, imageLoaded, imageError, showLoading, handleImageLoad, handleImageError]);
   
   // 处理空分类，显示为"未分类"
   const displayCatelog = useMemo(() => {
