@@ -56,7 +56,7 @@ func AddCatelog(data types.AddCatelogDto) {
 	if data.Name == "" || strings.TrimSpace(data.Name) == "" {
 		return
 	}
-	
+
 	// 先检查重复不重复
 	existCatelogs := GetAllCatelog()
 	var existCatelogsArr []string
@@ -93,4 +93,29 @@ func GetAllCatelog() []types.Catelog {
 	}
 	defer rows.Close()
 	return results
+}
+
+func UpdateCatelogsSort(updates []types.UpdateCatelogsSortDto) error {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql := `UPDATE nav_catelog SET sort = ? WHERE id = ?`
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmt.Close()
+
+	for _, update := range updates {
+		_, err = stmt.Exec(update.Sort, update.Id)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
 }

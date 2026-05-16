@@ -327,7 +327,7 @@ const Content = () => {
             <LocalClock />
           </div>
         )}
-        <div className="content">
+        <div className={`content topbar-content ${data?.siteConfig?.compactMode ? "compact-mode" : ""}`}>
           <SearchBar
             searchString={val}
             setSearchText={(t) => {
@@ -344,7 +344,12 @@ const Content = () => {
         </div>
       </div>
       {showBackTop && (
-        <button className="back-top-icon-btn" onClick={scrollToTop} type="button" aria-label="scroll to top">
+        <button
+          className={`back-top-icon-btn ${data?.siteConfig?.compactMode ? "compact-mode" : ""}`}
+          onClick={scrollToTop}
+          type="button"
+          aria-label="scroll to top"
+        >
           <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true">
             <path d="M12 7.4L6.2 13.2l1.4 1.4 4.4-4.4 4.4 4.4 1.4-1.4z" />
           </svg>

@@ -510,6 +510,33 @@ func UpdateCatelogHandler(c *gin.Context) {
 	})
 }
 
+func UpdateCatelogsSortHandler(c *gin.Context) {
+	var updates []types.UpdateCatelogsSortDto
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		utils.CheckErr(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success":      false,
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+
+	err := service.UpdateCatelogsSort(updates)
+	if err != nil {
+		utils.CheckErr(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+		"message": "更新排序成功",
+	})
+}
+
 func ManifastHanlder(c *gin.Context) {
 
 	setting := service.GetSetting()

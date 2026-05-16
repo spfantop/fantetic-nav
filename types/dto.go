@@ -53,3 +53,8 @@ type UpdateToolsSortDto struct {
 	Id   int `json:"id"`
 	Sort int `json:"sort"`
 }
+
+type UpdateCatelogsSortDto struct {
+	Id   int `json:"id"`
+	Sort int `json:"sort"`
+}

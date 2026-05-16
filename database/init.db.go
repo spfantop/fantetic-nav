@@ -25,41 +25,41 @@ func columnExists(tableName string, columnName string) bool {
 func InitDB() {
 	var err error
 	utils.PathExistsOrCreate("./data")
-	// 创建数据库
 	dir := "./data"
 	dbPath := filepath.Join(dir, "nav.db")
-	// 添加连接参数
 	dbPath = dbPath + "?_journal=WAL&_timeout=5000&_busy_timeout=5000&_txlock=immediate"
 	DB, err = sql.Open("sqlite", dbPath)
 	utils.CheckErr(err)
-	// user 表
-	sql_create_table := `
+
+	sqlCreateTable := `
 		CREATE TABLE IF NOT EXISTS nav_user (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT,
 			password TEXT
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
-	utils.CheckErr(err)
-	// setting 表
-	sql_create_table = `
-	CREATE TABLE IF NOT EXISTS nav_setting (
-		id INTEGER PRIMARY KEY AUTOINCREMENT,
-		favicon TEXT,
-		title TEXT,
-		govRecord TEXT,
-		logo192 TEXT,
-		logo512 TEXT,
-		hideAdmin BOOLEAN,
-		hideGithub BOOLEAN,
-		hideToggleJumpTarget BOOLEAN,
-		jumpTargetBlank BOOLEAN
-	);
 	`
-	_, err = DB.Exec(sql_create_table)
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
-	// 检查并添加列
+
+	sqlCreateTable = `
+		CREATE TABLE IF NOT EXISTS nav_setting (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			favicon TEXT,
+			title TEXT,
+			govRecord TEXT,
+			footerName TEXT,
+			footerLink TEXT,
+			logo192 TEXT,
+			logo512 TEXT,
+			hideAdmin BOOLEAN,
+			hideGithub BOOLEAN,
+			hideToggleJumpTarget BOOLEAN,
+			jumpTargetBlank BOOLEAN
+		);
+	`
+	_, err = DB.Exec(sqlCreateTable)
+	utils.CheckErr(err)
+
 	if !columnExists("nav_setting", "logo192") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN logo192 TEXT;`)
 	}
@@ -69,24 +69,26 @@ func InitDB() {
 	if !columnExists("nav_setting", "govRecord") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN govRecord TEXT;`)
 	}
+	if !columnExists("nav_setting", "footerName") {
+		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN footerName TEXT;`)
+	}
+	if !columnExists("nav_setting", "footerLink") {
+		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN footerLink TEXT;`)
+	}
 	if !columnExists("nav_setting", "jumpTargetBlank") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN jumpTargetBlank BOOLEAN;`)
 	}
-	// 设置表表结构升级-20230628
 	if !columnExists("nav_setting", "hideAdmin") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN hideAdmin BOOLEAN;`)
 	}
-	// 设置表表结构升级-20230627
 	if !columnExists("nav_setting", "hideGithub") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN hideGithub BOOLEAN;`)
 	}
-	// 设置表表结构升级-20250624
 	if !columnExists("nav_setting", "hideToggleJumpTarget") {
 		DB.Exec(`ALTER TABLE nav_setting ADD COLUMN hideToggleJumpTarget BOOLEAN;`)
 	}
 
-	// 默认 tools 用的 表
-	sql_create_table = `
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_table (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT,
@@ -95,65 +97,56 @@ func InitDB() {
 			catelog TEXT,
 			desc TEXT
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
 
-	// tools数据表结构升级-20230327
 	if !columnExists("nav_table", "sort") {
 		DB.Exec(`ALTER TABLE nav_table ADD COLUMN sort INTEGER;`)
 	}
-
-	// tools数据表结构升级-20230627
 	if !columnExists("nav_table", "hide") {
 		DB.Exec(`ALTER TABLE nav_table ADD COLUMN hide BOOLEAN;`)
 	}
 
-	// 分类表
-	sql_create_table = `
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_catelog (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT
 		);
-			`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
 
-	// 分类表表结构升级-20230327
 	if !columnExists("nav_catelog", "sort") {
 		DB.Exec(`ALTER TABLE nav_catelog ADD COLUMN sort INTEGER NOT NULL DEFAULT 0;`)
 	}
-
-	// 分类表表结构升级-20241219-【隐藏分类】
 	if !columnExists("nav_catelog", "hide") {
 		DB.Exec(`ALTER TABLE nav_catelog ADD COLUMN hide BOOLEAN;`)
 	}
-	migration_2024_12_13() // 只涉及 nav_catelog 表，所以可以放在这里
+	migration_2024_12_13()
 
-	// api token 表
-	sql_create_table = `
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_api_token (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT,
 			value TEXT,
 			disabled INTEGER
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
-	// img 表
-	sql_create_table = `
+
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_img (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			url TEXT,
 			value TEXT
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
 
-	// 搜索引擎表
-	sql_create_table = `
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_search_engine (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			name TEXT NOT NULL,
@@ -163,23 +156,21 @@ func InitDB() {
 			sort INTEGER NOT NULL DEFAULT 0,
 			enabled BOOLEAN NOT NULL DEFAULT 1
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
 
-	// 网站配置表
-	sql_create_table = `
+	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_site_config (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			noImageMode BOOLEAN NOT NULL DEFAULT 0,
 			compactMode BOOLEAN NOT NULL DEFAULT 0,
 			showClock BOOLEAN NOT NULL DEFAULT 1
 		);
-		`
-	_, err = DB.Exec(sql_create_table)
+	`
+	_, err = DB.Exec(sqlCreateTable)
 	utils.CheckErr(err)
 
-	// 网站配置表结构升级 - 添加compactMode列
 	if !columnExists("nav_site_config", "compactMode") {
 		DB.Exec(`ALTER TABLE nav_site_config ADD COLUMN compactMode BOOLEAN NOT NULL DEFAULT 0;`)
 	}
@@ -187,18 +178,14 @@ func InitDB() {
 		DB.Exec(`ALTER TABLE nav_site_config ADD COLUMN showClock BOOLEAN NOT NULL DEFAULT 1;`)
 	}
 
-	// 如果不存在，就初始化默认搜索引擎
-	sql_get_search_engine := `
-		SELECT COUNT(*) FROM nav_search_engine;
-		`
+	sqlGetSearchEngine := `SELECT COUNT(*) FROM nav_search_engine;`
 	var searchEngineCount int
-	err = DB.QueryRow(sql_get_search_engine).Scan(&searchEngineCount)
+	err = DB.QueryRow(sqlGetSearchEngine).Scan(&searchEngineCount)
 	utils.CheckErr(err)
 	if searchEngineCount == 0 {
-		// 初始化默认搜索引擎
 		defaultEngines := []struct {
 			name       string
-			baseUrl    string
+			baseURL    string
 			queryParam string
 			logo       string
 			sort       int
@@ -208,33 +195,30 @@ func InitDB() {
 			{"Google", "https://www.google.com/search", "q", "google.ico", 3},
 		}
 
-		sql_add_search_engine := `
+		sqlAddSearchEngine := `
 			INSERT INTO nav_search_engine (name, baseUrl, queryParam, logo, sort, enabled)
 			VALUES (?, ?, ?, ?, ?, ?);
-			`
-		stmt, err := DB.Prepare(sql_add_search_engine)
+		`
+		stmt, err := DB.Prepare(sqlAddSearchEngine)
 		utils.CheckErr(err)
 		defer stmt.Close()
 
 		for _, engine := range defaultEngines {
-			_, err = stmt.Exec(engine.name, engine.baseUrl, engine.queryParam, engine.logo, engine.sort, true)
+			_, err = stmt.Exec(engine.name, engine.baseURL, engine.queryParam, engine.logo, engine.sort, true)
 			utils.CheckErr(err)
 		}
 		logger.LogInfo("默认搜索引擎初始化成功")
 	}
 
-	// 如果不存在，就初始化用户
-	sql_get_user := `
-		SELECT * FROM nav_user;
-		`
-	rows, err := DB.Query(sql_get_user)
+	sqlGetUser := `SELECT * FROM nav_user;`
+	rows, err := DB.Query(sqlGetUser)
 	utils.CheckErr(err)
 	if !rows.Next() {
-		sql_add_user := `
+		sqlAddUser := `
 			INSERT INTO nav_user (id, name, password)
 			VALUES (?, ?, ?);
-			`
-		stmt, err := DB.Prepare(sql_add_user)
+		`
+		stmt, err := DB.Prepare(sqlAddUser)
 		utils.CheckErr(err)
 		res, err := stmt.Exec(utils.GenerateId(), "admin", "admin")
 		utils.CheckErr(err)
@@ -242,38 +226,33 @@ func InitDB() {
 		utils.CheckErr(err)
 	}
 	rows.Close()
-	// 如果不存在设置，就初始化
-	sql_get_setting := `
-		SELECT * FROM nav_setting;
-		`
-	rows, err = DB.Query(sql_get_setting)
+
+	sqlGetSetting := `SELECT * FROM nav_setting;`
+	rows, err = DB.Query(sqlGetSetting)
 	utils.CheckErr(err)
 	if !rows.Next() {
-		sql_add_setting := `
-			INSERT INTO nav_setting (favicon, title, govRecord, logo192, logo512, hideAdmin, hideGithub, hideToggleJumpTarget, jumpTargetBlank)
-			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
-			`
-		stmt, err := DB.Prepare(sql_add_setting)
+		sqlAddSetting := `
+			INSERT INTO nav_setting (favicon, title, govRecord, footerName, footerLink, logo192, logo512, hideAdmin, hideGithub, hideToggleJumpTarget, jumpTargetBlank)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+		`
+		stmt, err := DB.Prepare(sqlAddSetting)
 		utils.CheckErr(err)
-		res, err := stmt.Exec("favicon.ico", "Van Nav", "", "logo192.png", "logo512.png", false, false, false, true)
+		res, err := stmt.Exec("favicon.ico", "Van Nav", "", "笔尖码动", "https://henniubi.com", "logo192.png", "logo512.png", false, false, false, true)
 		utils.CheckErr(err)
 		_, err = res.LastInsertId()
 		utils.CheckErr(err)
 	}
 	rows.Close()
 
-	// 如果不存在网站配置，就初始化
-	sql_get_site_config := `
-		SELECT * FROM nav_site_config;
-		`
-	rows, err = DB.Query(sql_get_site_config)
+	sqlGetSiteConfig := `SELECT * FROM nav_site_config;`
+	rows, err = DB.Query(sqlGetSiteConfig)
 	utils.CheckErr(err)
 	if !rows.Next() {
-		sql_add_site_config := `
+		sqlAddSiteConfig := `
 			INSERT INTO nav_site_config (noImageMode, compactMode, showClock)
 			VALUES (?, ?, ?);
-			`
-		stmt, err := DB.Prepare(sql_add_site_config)
+		`
+		stmt, err := DB.Prepare(sqlAddSiteConfig)
 		utils.CheckErr(err)
 		res, err := stmt.Exec(false, false, true)
 		utils.CheckErr(err)
@@ -281,20 +260,17 @@ func InitDB() {
 		utils.CheckErr(err)
 	}
 	rows.Close()
-	logger.LogInfo("数据库初始化成功💗")
 
-	// 清理空分类记录 - 删除名称为空或只包含空白字符的分类
+	logger.LogInfo("数据库初始化成功")
 	cleanupEmptyCategories()
 }
 
-// cleanupEmptyCategories 清理空分类记录
 func cleanupEmptyCategories() {
-	// 删除名称为空或只包含空白字符的分类记录
-	sql_cleanup := `
-		DELETE FROM nav_catelog 
+	sqlCleanup := `
+		DELETE FROM nav_catelog
 		WHERE name IS NULL OR name = '' OR TRIM(name) = '';
 	`
-	result, err := DB.Exec(sql_cleanup)
+	result, err := DB.Exec(sqlCleanup)
 	if err != nil {
 		logger.LogInfo("清理空分类记录时出错: %v", err)
 		return

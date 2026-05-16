@@ -1,6 +1,6 @@
 ﻿.select-tag {
+  border-radius: 16px;
   cursor: pointer;
-  border: 1px solid #979797;
   transition: all 0.3s;
   box-sizing: border-box;
 }
@@ -10,7 +10,6 @@
   color: #ffffff;
 }
 .select-tag-active {
-  color: #ffffff;
   background-color: #7c7c7c;
   border: 1px solid #7c7c7c;
 }

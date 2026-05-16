@@ -1,6 +1,6 @@
 import { Button, Card, Form, Input, message, Select, Spin, Switch } from 'antd';
 import { useCallback, useEffect } from 'react';
-import { fetchUpdateSetting, fetchUpdateUser, fetchUpdateSiteConfig } from '../../../utils/api';
+import { fetchUpdateSetting, fetchUpdateSiteConfig, fetchUpdateUser } from '../../../utils/api';
 import { useData } from '../hooks/useData';
 import './Setting.css';
 
@@ -108,6 +108,16 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item label="备案信息" name="govRecord">
               <Input placeholder="请输入网站备案信息" />
             </Form.Item>
+            <Form.Item label="底部文案" name="footerName">
+              <Input placeholder="例如：笔尖码动" />
+            </Form.Item>
+            <Form.Item
+              label="底部链接"
+              name="footerLink"
+              rules={[{ type: 'url', message: '请输入合法 URL（含 http/https）' }]}
+            >
+              <Input placeholder="例如：https://henniubi.com" />
+            </Form.Item>
 
             <Form.Item
               label="默认跳转方式"
@@ -128,7 +138,6 @@ export const Setting: React.FC<SettingProps> = () => {
               label="logo 192x192"
               name="logo192"
               rules={[{ required: true, message: '请输入 192x192 的 logo 链接' }]}
-              tooltip="192x192 logo，用于可安装的 web 应用"
             >
               <Input placeholder="192x192 logo 链接" />
             </Form.Item>
@@ -136,32 +145,16 @@ export const Setting: React.FC<SettingProps> = () => {
               label="logo 512x512"
               name="logo512"
               rules={[{ required: true, message: '请输入 512x512 的 logo 链接' }]}
-              tooltip="512x512 logo，用于可安装的 web 应用"
             >
               <Input placeholder="512x512 logo 链接" />
             </Form.Item>
-            <Form.Item
-              label="隐藏管理后台卡片"
-              name="hideAdmin"
-              valuePropName="checked"
-              tooltip="默认显示，开启后将在前台隐藏管理后台卡片"
-            >
+            <Form.Item label="隐藏管理后台卡片" name="hideAdmin" valuePropName="checked">
               <Switch />
             </Form.Item>
-            <Form.Item
-              label="隐藏 Github 按钮"
-              name="hideGithub"
-              valuePropName="checked"
-              tooltip="默认显示，开启后将在前台隐藏 Github 按钮"
-            >
+            <Form.Item label="隐藏 Github 按钮" name="hideGithub" valuePropName="checked">
               <Switch />
             </Form.Item>
-            <Form.Item
-              label="隐藏跳转方式卡片"
-              name="hideToggleJumpTarget"
-              valuePropName="checked"
-              tooltip="默认显示，开启后将在前台隐藏跳转方式卡片"
-            >
+            <Form.Item label="隐藏跳转方式卡片" name="hideToggleJumpTarget" valuePropName="checked">
               <Switch />
             </Form.Item>
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
@@ -181,28 +174,13 @@ export const Setting: React.FC<SettingProps> = () => {
             labelCol={{ span: 6 }}
             form={siteConfigForm}
           >
-            <Form.Item
-              label="无图模式"
-              name="noImageMode"
-              valuePropName="checked"
-              tooltip="开启后前台将不展示工具 logo 等图片"
-            >
+            <Form.Item label="无图模式" name="noImageMode" valuePropName="checked">
               <Switch />
             </Form.Item>
-            <Form.Item
-              label="精简模式"
-              name="compactMode"
-              valuePropName="checked"
-              tooltip="开启后卡片仅展示标题和 logo"
-            >
+            <Form.Item label="精简模式" name="compactMode" valuePropName="checked">
               <Switch />
             </Form.Item>
-            <Form.Item
-              label="显示时间"
-              name="showClock"
-              valuePropName="checked"
-              tooltip="控制前台搜索框上方时间日期展示（移动端不显示）"
-            >
+            <Form.Item label="显示时间" name="showClock" valuePropName="checked">
               <Switch />
             </Form.Item>
             <Form.Item wrapperCol={{ offset: 8, span: 16 }}>

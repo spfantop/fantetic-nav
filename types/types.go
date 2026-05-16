@@ -1,11 +1,12 @@
 package types
 
-// 默认是 0
 type Setting struct {
 	Id                   int    `json:"id"`
 	Favicon              string `json:"favicon"`
 	Title                string `json:"title"`
 	GovRecord            string `json:"govRecord"`
+	FooterName           string `json:"footerName"`
+	FooterLink           string `json:"footerLink"`
 	Logo192              string `json:"logo192"`
 	Logo512              string `json:"logo512"`
 	HideAdmin            bool   `json:"hideAdmin"`
@@ -26,6 +27,7 @@ type User struct {
 	Name     string `json:"name"`
 	Password string `json:"password"`
 }
+
 type Img struct {
 	Id    int    `json:"id"`
 	Url   string `json:"url"`
@@ -50,7 +52,6 @@ type Catelog struct {
 	Hide bool   `json:"hide"`
 }
 
-// 搜索引擎模型
 type SearchEngine struct {
 	Id         int    `json:"id"`
 	Name       string `json:"name"`
@@ -61,7 +62,6 @@ type SearchEngine struct {
 	Enabled    bool   `json:"enabled"`
 }
 
-// 网站配置模型
 type SiteConfig struct {
 	Id          int  `json:"id"`
 	NoImageMode bool `json:"noImageMode"`

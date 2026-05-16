@@ -125,6 +125,10 @@ export const fetchDeleteCatelog = async (id: number) => {
     const { data } = await axios.delete(`/api/admin/catelog/${id}`);
     return data?.data || {};
 };
+export const fetchUpdateCatelogsSort = async (updates: { id: number; sort: number }[]) => {
+    const { data } = await axios.put(`/api/admin/catelogs/sort`, updates);
+    return data?.data || {};
+};
 
 export const fetchUpdateSetting = async (payload: any) => {
     const { data } = await axios.put(`/api/admin/setting`, payload);
