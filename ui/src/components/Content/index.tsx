@@ -4,14 +4,15 @@ import SearchBar from "../SearchBar";
 import { Loading } from "../Loading";
 import { Helmet } from "react-helmet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { FetchList, fetchBatchLogos } from "../../utils/api";
+import { FetchList } from "../../utils/api";
 import TagSelector from "../TagSelector";
 import pinyin from "pinyin-match";
 import { generateSearchEngineCard } from "../../utils/serachEngine";
 import { toggleJumpTarget } from "../../utils/setting";
 import LocalClock from "./LocalClock";
 
-const FRAME_INITIAL_COUNT = 48;
+const FRAME_INITIAL_COUNT_DESKTOP = 24;
+const FRAME_INITIAL_COUNT_MOBILE = 16;
 const FRAME_BATCH_COUNT = 48;
 const BACK_TO_TOP_THRESHOLD = 300;
 const ALL_TOOLS_TAG = "全部工具";
@@ -88,6 +89,13 @@ const normalizeHomeData = (payload: any) => {
   return nextData;
 };
 
+const getInitialRenderCount = () => {
+  if (typeof window === "undefined") {
+    return FRAME_INITIAL_COUNT_DESKTOP;
+  }
+  return window.innerWidth < 768 ? FRAME_INITIAL_COUNT_MOBILE : FRAME_INITIAL_COUNT_DESKTOP;
+};
+
 const Content = () => {
   const [data, setData] = useState<any>({});
   const [loading, setLoading] = useState<boolean>(true);
@@ -95,13 +103,11 @@ const Content = () => {
   const [searchString, setSearchString] = useState("");
   const [val, setVal] = useState("");
   const [searchEngineCards, setSearchEngineCards] = useState<any[]>([]);
-  const [batchLogoMap, setBatchLogoMap] = useState<Record<string, string>>({});
-  const [renderCount, setRenderCount] = useState(FRAME_INITIAL_COUNT);
+  const [renderCount, setRenderCount] = useState(getInitialRenderCount);
   const [showBackTop, setShowBackTop] = useState(false);
 
   const filteredDataRef = useRef<any>([]);
   const renderRafRef = useRef<number | null>(null);
-  const logoBatchReqRef = useRef(0);
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const applyTagFromData = useCallback((nextData: any) => {
@@ -117,7 +123,6 @@ const Content = () => {
     setCurrTag(defaultTag);
   }, []);
 
-
   const stopRenderRaf = useCallback(() => {
     if (renderRafRef.current !== null) {
       window.cancelAnimationFrame(renderRafRef.current);
@@ -125,49 +130,10 @@ const Content = () => {
     }
   }, []);
 
-  const startBatchLogoFetch = useCallback(async (tools: any[]) => {
-    const reqId = ++logoBatchReqRef.current;
-    const urls = Array.from(
-      new Set(
-        (tools || [])
-          .map((tool: any) => tool?.logo)
-          .filter((logo: any) => typeof logo === "string" && /^https?:\/\//i.test(logo.trim()))
-          .map((logo: string) => logo.trim())
-      )
-    );
-
-    if (!urls.length) {
-      if (reqId === logoBatchReqRef.current) {
-        setBatchLogoMap({});
-      }
-      return;
-    }
-
-    try {
-      const result = await fetchBatchLogos(urls);
-      if (reqId !== logoBatchReqRef.current) {
-        return;
-      }
-      const nextMap: Record<string, string> = {};
-      Object.entries(result || {}).forEach(([url, item]: [string, any]) => {
-        if (item?.base64 && item?.mime) {
-          nextMap[url] = `data:${item.mime};base64,${item.base64}`;
-        }
-      });
-      setBatchLogoMap(nextMap);
-    } catch {
-      if (reqId === logoBatchReqRef.current) {
-        setBatchLogoMap({});
-      }
-    }
-  }, []);
-
   const loadData = useCallback(async () => {
     const localCacheData = normalizeHomeData(readHomeStorageCache());
     if (localCacheData) {
       setData(localCacheData);
-      setBatchLogoMap({});
-      startBatchLogoFetch(localCacheData?.tools || []);
       applyTagFromData(localCacheData);
       setLoading(false);
     }
@@ -177,34 +143,15 @@ const Content = () => {
         setLoading(true);
       }
       const r = normalizeHomeData(await fetchHomeData());
-      if (Array.isArray(r?.catelogs)) {
-        const allIndex = r.catelogs.indexOf(ALL_TOOLS_TAG);
-        if (allIndex !== -1) {
-          const allTag = r.catelogs.splice(allIndex, 1)[0];
-          r.catelogs.push(allTag);
-        }
-      }
       setData(r);
       writeHomeStorageCache(r);
-      setBatchLogoMap({});
-      startBatchLogoFetch(r?.tools || []);
-
-      const tagInLocalStorage = window.localStorage.getItem("tag");
-      if (tagInLocalStorage && tagInLocalStorage !== "" && r?.catelogs?.includes(tagInLocalStorage)) {
-        setCurrTag(tagInLocalStorage);
-      } else {
-        const defaultTag =
-          Array.isArray(r?.catelogs) && r.catelogs.length > 0
-            ? r.catelogs.find((t) => t !== ALL_TOOLS_TAG) ?? r.catelogs[0]
-            : DEFAULT_TAG;
-        setCurrTag(defaultTag);
-      }
+      applyTagFromData(r);
     } catch (error) {
       console.error("加载首页数据失败:", error);
     } finally {
       setLoading(false);
     }
-  }, [applyTagFromData, startBatchLogoFetch]);
+  }, [applyTagFromData]);
 
   useEffect(() => {
     loadData();
@@ -277,7 +224,7 @@ const Content = () => {
   useEffect(() => {
     stopRenderRaf();
     const total = filteredData.length;
-    const initialCount = Math.min(FRAME_INITIAL_COUNT, total);
+    const initialCount = Math.min(getInitialRenderCount(), total);
     setRenderCount(initialCount);
 
     if (total <= initialCount) {
@@ -339,14 +286,12 @@ const Content = () => {
 
   const renderCardsV2 = useCallback(() => {
     return renderedCards.map((item, index) => {
-      const rawLogo = item?.logo;
-      const mappedLogo = typeof rawLogo === "string" ? batchLogoMap[rawLogo] || rawLogo : rawLogo;
       return (
         <CardV2
           title={item.name}
           url={item.url}
           des={item.desc}
-          logo={mappedLogo}
+          logo={item?.logo}
           key={item.id}
           catelog={item.catelog}
           index={index}
@@ -363,7 +308,7 @@ const Content = () => {
         />
       );
     });
-  }, [renderedCards, batchLogoMap, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, loadData]);
+  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, loadData]);
 
   const handleContentScroll = useCallback((ev: any) => {
     const nextShow = ev.currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
@@ -431,6 +376,3 @@ const Content = () => {
 };
 
 export default Content;
-
-
-

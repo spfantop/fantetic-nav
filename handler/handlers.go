@@ -1,9 +1,12 @@
 package handler
 
 import (
+	"crypto/sha1"
 	"encoding/base64"
+	"encoding/hex"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -236,6 +239,12 @@ func GetLogoImgHandler(c *gin.Context) {
 		})
 		return
 	}
+	etagHash := sha1.Sum([]byte(url + ":" + img.Value))
+	etag := "\"" + hex.EncodeToString(etagHash[:]) + "\""
+	if strings.TrimSpace(c.GetHeader("If-None-Match")) == etag {
+		c.Status(http.StatusNotModified)
+		return
+	}
 	imgBuffer, err := base64.StdEncoding.DecodeString(img.Value)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -253,6 +262,8 @@ func GetLogoImgHandler(c *gin.Context) {
 		t = "image/png"
 	}
 	// 直接输出二进制数据，避免string转换导致的内存多分配
+	c.Header("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800")
+	c.Header("ETag", etag)
 	c.Data(http.StatusOK, t, imgBuffer)
 }
 
@@ -276,12 +287,24 @@ func GetLogoImgBatchHandler(c *gin.Context) {
 
 	imgs := service.GetImgsFromDB(req.Urls)
 	result := make(map[string]any, len(imgs))
+	etagInputs := make([]string, 0, len(imgs))
 	for originalURL, img := range imgs {
 		result[originalURL] = gin.H{
 			"mime":   detectImageContentType(originalURL),
 			"base64": img.Value,
 		}
+		etagInputs = append(etagInputs, originalURL+":"+img.Value)
 	}
+	sort.Strings(etagInputs)
+	etagRaw := strings.Join(etagInputs, "|")
+	etagHash := sha1.Sum([]byte(etagRaw))
+	etag := "\"" + hex.EncodeToString(etagHash[:]) + "\""
+	if strings.TrimSpace(c.GetHeader("If-None-Match")) == etag {
+		c.Status(http.StatusNotModified)
+		return
+	}
+	c.Header("Cache-Control", "public, max-age=300, stale-while-revalidate=600")
+	c.Header("ETag", etag)
 
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
