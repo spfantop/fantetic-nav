@@ -13,6 +13,7 @@ const Catelog = React.lazy(() => import('./pages/admin/tabs/Catelog').then(m => 
 const ApiToken = React.lazy(() => import('./pages/admin/tabs/ApiToken').then(m => ({ default: m.ApiToken })));
 const Setting = React.lazy(() => import('./pages/admin/tabs/Setting').then(m => ({ default: m.Setting })));
 const SearchEngine = React.lazy(() => import('./pages/admin/tabs/Search'));
+const NotFound = React.lazy(() => import('./pages/NotFound'));
 
 const getPageBackgroundColor = () => '#121212';
 
@@ -73,7 +74,9 @@ function App() {
                 <Route path="search-engines" element={<SearchEngine />} />
                 <Route path="api-token" element={<ApiToken />} />
                 <Route path="settings" element={<Setting />} />
+                <Route path="*" element={<NotFound />} />
               </Route>
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
         </Router>
