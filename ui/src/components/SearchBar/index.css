@@ -7,4 +7,29 @@
   backdrop-filter: blur(10px); /* 毛玻璃模糊效果 */
   -webkit-backdrop-filter: blur(2px) saturate(120%);
   border-radius: 16px; /* 圆角 */
+  border: 1px solid rgba(255, 255, 255, 0.95);
+}
+
+.search input:hover,
+.search input:focus,
+.search input:focus-visible {
+  border: 1px solid #ffffff;
+}
+
+@keyframes search-breathing-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.18), 0 0 8px rgba(255, 255, 255, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.28), 0 0 18px rgba(255, 255, 255, 0.42);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.18), 0 0 8px rgba(255, 255, 255, 0.2);
+  }
+}
+
+.search input:focus,
+.search input:focus-visible,
+.search input:not(:placeholder-shown) {
+  animation: search-breathing-glow 1.8s ease-in-out infinite;
 }
