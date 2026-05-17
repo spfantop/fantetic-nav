@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { ConfigProvider, theme } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -11,6 +12,7 @@ const root = createRoot(container!);
 root.render(
   <React.StrictMode>
     <ConfigProvider
+      locale={zhCN}
       theme={{
         algorithm: theme.darkAlgorithm,
         token: {

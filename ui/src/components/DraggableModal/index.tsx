@@ -49,6 +49,8 @@ export const DraggableModal: React.FC<ModalProps> = ({ title, ...rest }) => {
   return (
     <Modal
       {...rest}
+      okText={rest.okText ?? "确定"}
+      cancelText={rest.cancelText ?? "取消"}
       title={titleNode}
       modalRender={(modal) => (
         <div style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}>{modal}</div>
