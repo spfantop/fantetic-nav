@@ -1,7 +1,7 @@
 import {
   Button,
   Card,
-  Modal,
+
   Popconfirm,
   Space,
   Spin,
@@ -15,6 +15,7 @@ import {
   Tooltip,
   Switch
 } from "antd";
+import DraggableModal from "../../../components/DraggableModal";
 import {
   QuestionCircleOutlined,
   HolderOutlined,
@@ -528,7 +529,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
           </SortableContext>
         </DndContext>
       </Spin>
-      {<Modal
+      {<DraggableModal
         open={showAddModel}
         title={"新建工具"}
         onCancel={() => {
@@ -627,8 +628,8 @@ export const Tools: React.FC<ToolsProps> = (props) => {
             </Form.Item>
           </Form>
         </Spin>
-      </Modal>}
-      {<Modal
+      </DraggableModal>}
+      {<DraggableModal
         open={showEdit}
         title={"修改工具"}
         destroyOnClose
@@ -700,9 +701,13 @@ export const Tools: React.FC<ToolsProps> = (props) => {
             </Form.Item>
           </Form>
         </Spin>
-      </Modal>}
+      </DraggableModal>}
     </Card>
   );
 };
+
+
+
+
 
 

@@ -1,5 +1,6 @@
 
-import { Button, Card, Form, Input, Modal, message, Popconfirm, Space, Spin, Table, Typography } from 'antd';
+import { Button, Card, Form, Input, message, Popconfirm, Space, Spin, Table, Typography } from 'antd';
+import DraggableModal from '../../../components/DraggableModal';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useCallback, useState } from 'react';
 import { fetchAddApiToken, fetchDeleteApiToken } from '../../../utils/api';
@@ -114,7 +115,7 @@ export const ApiToken: React.FC<ApiTokenProps> = (props) => {
           />
         </Table>
       </Spin>
-      <Modal
+      <DraggableModal
         visible={showAddModel}
         title={"新建 Token"}
         onCancel={() => {
@@ -130,7 +131,9 @@ export const ApiToken: React.FC<ApiTokenProps> = (props) => {
             <Input placeholder="请输入 API Token 名称" />
           </Form.Item>
         </Form>
-      </Modal>
+      </DraggableModal>
     </Card>
   );
 }
+
+

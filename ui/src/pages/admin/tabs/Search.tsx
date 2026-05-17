@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import {
   Table,
   Button,
-  Modal,
+
   Form,
   Input,
   Space,
@@ -11,6 +11,7 @@ import {
   Switch,
   Spin,
 } from 'antd';
+import DraggableModal from '../../../components/DraggableModal';
 import { DragOutlined, DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { DndContext } from '@dnd-kit/core';
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -283,7 +284,7 @@ const SearchEngineManager: React.FC = () => {
         </DndContext>
       </Spin>
 
-      <Modal
+      <DraggableModal
         title={editingEngine ? '编辑搜索引擎' : '添加搜索引擎'}
         open={isModalVisible}
         onOk={handleModalOk}
@@ -337,9 +338,11 @@ const SearchEngineManager: React.FC = () => {
             <Input placeholder="例如：baidu.ico 或 https://example.com/logo.png" />
           </Form.Item>
         </Form>
-      </Modal>
+      </DraggableModal>
     </div>
   );
 };
 
 export default SearchEngineManager;
+
+

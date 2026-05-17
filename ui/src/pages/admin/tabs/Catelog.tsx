@@ -4,7 +4,7 @@ import {
   Form,
   Input,
   InputNumber,
-  Modal,
+
   Popconfirm,
   Space,
   Spin,
@@ -13,6 +13,7 @@ import {
   Tooltip,
   message,
 } from "antd";
+import DraggableModal from "../../../components/DraggableModal";
 import { DeleteOutlined, EditOutlined, HolderOutlined, QuestionCircleOutlined } from "@ant-design/icons";
 import React, { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type { DragEndEvent } from "@dnd-kit/core";
@@ -260,7 +261,7 @@ export const Catelog: React.FC<CatelogProps> = () => {
         </DndContext>
       </Spin>
 
-      <Modal
+      <DraggableModal
         open={showAddModel}
         title="新建分类"
         onCancel={() => {
@@ -316,9 +317,9 @@ export const Catelog: React.FC<CatelogProps> = () => {
             <Switch checkedChildren="开" unCheckedChildren="关" />
           </Form.Item>
         </Form>
-      </Modal>
+      </DraggableModal>
 
-      <Modal
+      <DraggableModal
         open={showEdit}
         title="修改分类"
         onCancel={() => setShowEdit(false)}
@@ -374,7 +375,10 @@ export const Catelog: React.FC<CatelogProps> = () => {
             </Form.Item>
           </Form>
         </Spin>
-      </Modal>
+      </DraggableModal>
     </Card>
   );
 };
+
+
+
