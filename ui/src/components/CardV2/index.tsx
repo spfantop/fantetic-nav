@@ -1,18 +1,21 @@
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import "./index.css";
 import { getLogoUrl } from "../../utils/check";
 import { getJumpTarget } from "../../utils/setting";
 
 const loadedImageSrcCache = new Set<string>();
 const failedImageSrcCache = new Set<string>();
+const EAGER_LOAD_COUNT = 10;
 
 const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noImageMode, compactMode }) => {
+  const cardRef = useRef<HTMLAnchorElement | null>(null);
   const imageSrc = useMemo(() => {
     return url === "admin" ? logo : getLogoUrl(logo);
   }, [logo, url]);
   const [imageLoaded, setImageLoaded] = useState(() => loadedImageSrcCache.has(imageSrc));
   const [imageError, setImageError] = useState(() => failedImageSrcCache.has(imageSrc));
   const [showLoading, setShowLoading] = useState(() => !loadedImageSrcCache.has(imageSrc) && !failedImageSrcCache.has(imageSrc));
+  const [isInView, setIsInView] = useState(index < EAGER_LOAD_COUNT);
   
   // 当图片源变化时重置状态，并添加超时保护
   useEffect(() => {
@@ -48,6 +51,30 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
     setImageError(true);
     setShowLoading(false);
   }, [imageSrc]);
+
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setIsInView(index < EAGER_LOAD_COUNT);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.target === el) {
+            setIsInView(entry.isIntersecting);
+          }
+        });
+      },
+      {
+        root: document.querySelector(".content-wraper"),
+        rootMargin: "280px 0px",
+        threshold: 0.01,
+      }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [index]);
   
   const el = useMemo(() => {
     if (imageError) {
@@ -60,6 +87,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
       }}>🖼️</div>;
     }
     
+    const shouldEagerLoad = (!isSearching && index < EAGER_LOAD_COUNT) || isInView;
     return (
       <>
         {showLoading && !imageLoaded && (
@@ -68,7 +96,9 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
         <img 
           src={imageSrc}
           alt={title}
-          loading="lazy"
+          loading={shouldEagerLoad ? "eager" : "lazy"}
+          decoding="async"
+          fetchPriority={isInView ? "high" : "low"}
           onLoad={handleImageLoad}
           onError={handleImageError}
           style={{
@@ -78,7 +108,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
         />
       </>
     );
-  }, [imageSrc, title, imageLoaded, imageError, showLoading, handleImageLoad, handleImageError]);
+  }, [imageSrc, title, imageLoaded, imageError, showLoading, handleImageLoad, handleImageError, index, isSearching, isInView]);
   
   // 处理空分类，显示为"未分类"
   const displayCatelog = useMemo(() => {
@@ -90,6 +120,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
   const showNumIndex = index < 10 && isSearching;
   return (
     <a
+      ref={cardRef}
       href={url === "toggleJumpTarget" ? undefined : url}
       onClick={() => {
         onClick();

@@ -95,3 +95,9 @@ input:focus-visible {
     background-color: #121212;
   }
 }
+
+@media (min-width: 1060px) {
+  body {
+    zoom: 0.9;
+  }
+}

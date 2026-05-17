@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"container/list"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
@@ -9,6 +10,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mereith/nav/database"
@@ -20,6 +23,119 @@ import (
 
 type GetLogoBatchReq struct {
 	Urls []string `json:"urls"`
+}
+
+type cachedLogo struct {
+	data        []byte
+	contentType string
+}
+
+type logoCacheItem struct {
+	key   string
+	value cachedLogo
+}
+
+type logoLRUCache struct {
+	maxEntries int
+	ll         *list.List
+	cache      map[string]*list.Element
+	mu         sync.Mutex
+}
+
+type logoNegativeCache struct {
+	ttl   time.Duration
+	cache map[string]time.Time
+	mu    sync.Mutex
+}
+
+func newLogoLRUCache(maxEntries int) *logoLRUCache {
+	return &logoLRUCache{
+		maxEntries: maxEntries,
+		ll:         list.New(),
+		cache:      make(map[string]*list.Element, maxEntries),
+	}
+}
+
+func (c *logoLRUCache) Get(key string) (cachedLogo, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if ele, ok := c.cache[key]; ok {
+		c.ll.MoveToFront(ele)
+		return ele.Value.(*logoCacheItem).value, true
+	}
+	return cachedLogo{}, false
+}
+
+func (c *logoLRUCache) Add(key string, value cachedLogo) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if ele, ok := c.cache[key]; ok {
+		ele.Value.(*logoCacheItem).value = value
+		c.ll.MoveToFront(ele)
+		return
+	}
+	ele := c.ll.PushFront(&logoCacheItem{key: key, value: value})
+	c.cache[key] = ele
+	if c.maxEntries > 0 && c.ll.Len() > c.maxEntries {
+		last := c.ll.Back()
+		if last == nil {
+			return
+		}
+		c.ll.Remove(last)
+		kv := last.Value.(*logoCacheItem)
+		delete(c.cache, kv.key)
+	}
+}
+
+func newLogoNegativeCache(ttl time.Duration) *logoNegativeCache {
+	return &logoNegativeCache{
+		ttl:   ttl,
+		cache: make(map[string]time.Time),
+	}
+}
+
+func (c *logoNegativeCache) Hit(key string) bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	expiresAt, ok := c.cache[key]
+	if !ok {
+		return false
+	}
+	if time.Now().After(expiresAt) {
+		delete(c.cache, key)
+		return false
+	}
+	return true
+}
+
+func (c *logoNegativeCache) Add(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.cache[key] = time.Now().Add(c.ttl)
+}
+
+func (c *logoNegativeCache) Delete(key string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	delete(c.cache, key)
+}
+
+var decodedLogoCache = newLogoLRUCache(1024)
+var missingLogoCache = newLogoNegativeCache(2 * time.Minute)
+
+func etagLastModified(etag string) time.Time {
+	if len(etag) < 10 {
+		return time.Unix(946684800, 0).UTC()
+	}
+	raw := strings.Trim(etag, "\"")
+	if len(raw) < 8 {
+		return time.Unix(946684800, 0).UTC()
+	}
+	seed, err := strconv.ParseInt(raw[:8], 16, 64)
+	if err != nil {
+		return time.Unix(946684800, 0).UTC()
+	}
+	return time.Unix(946684800+seed, 0).UTC()
 }
 
 func detectImageContentType(rawURL string) string {
@@ -223,48 +339,70 @@ func GetAllHandler(c *gin.Context) {
 }
 
 func GetLogoImgHandler(c *gin.Context) {
-	url := c.Query("url")
-	if url == "" {
+	rawURL := c.Query("url")
+	if rawURL == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": "URL参数不能为空",
 		})
 		return
 	}
-	img := service.GetImgFromDB(url)
-	if img.Value == "" {
+	if missingLogoCache.Hit(rawURL) {
 		c.JSON(http.StatusNotFound, gin.H{
 			"success":      false,
 			"errorMessage": "未找到图片",
 		})
 		return
 	}
-	etagHash := sha1.Sum([]byte(url + ":" + img.Value))
+	img := service.GetImgFromDB(rawURL)
+	if img.Value == "" {
+		missingLogoCache.Add(rawURL)
+		c.JSON(http.StatusNotFound, gin.H{
+			"success":      false,
+			"errorMessage": "未找到图片",
+		})
+		return
+	}
+	etagHash := sha1.Sum([]byte(rawURL + ":" + img.Value))
 	etag := "\"" + hex.EncodeToString(etagHash[:]) + "\""
+	lastModified := etagLastModified(etag)
+	c.Header("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800")
+	c.Header("ETag", etag)
+	c.Header("Last-Modified", lastModified.Format(http.TimeFormat))
+
 	if strings.TrimSpace(c.GetHeader("If-None-Match")) == etag {
 		c.Status(http.StatusNotModified)
 		return
 	}
+	if ifModifiedSince := c.GetHeader("If-Modified-Since"); ifModifiedSince != "" {
+		if t, err := time.Parse(http.TimeFormat, ifModifiedSince); err == nil && !lastModified.After(t.UTC()) {
+			c.Status(http.StatusNotModified)
+			return
+		}
+	}
+
+	cacheKey := etag + "|" + rawURL
+	if cached, ok := decodedLogoCache.Get(cacheKey); ok {
+		c.Data(http.StatusOK, cached.contentType, cached.data)
+		return
+	}
+
 	imgBuffer, err := base64.StdEncoding.DecodeString(img.Value)
 	if err != nil {
+		missingLogoCache.Add(rawURL)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success":      false,
 			"errorMessage": "图片解码失败",
 		})
 		return
 	}
-	l := strings.Split(url, ".")
-	suffix := l[len(l)-1]
-	t := "image/x-icon"
-	if suffix == "svg" || strings.Contains(url, ".svg") {
-		t = "image/svg+xml"
-	} else if suffix == "png" {
-		t = "image/png"
-	}
-	// 直接输出二进制数据，避免string转换导致的内存多分配
-	c.Header("Cache-Control", "public, max-age=86400, stale-while-revalidate=604800")
-	c.Header("ETag", etag)
-	c.Data(http.StatusOK, t, imgBuffer)
+	missingLogoCache.Delete(rawURL)
+	contentType := detectImageContentType(rawURL)
+	decodedLogoCache.Add(cacheKey, cachedLogo{
+		data:        imgBuffer,
+		contentType: contentType,
+	})
+	c.Data(http.StatusOK, contentType, imgBuffer)
 }
 
 func GetLogoImgBatchHandler(c *gin.Context) {

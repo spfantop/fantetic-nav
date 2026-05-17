@@ -13,17 +13,19 @@ import LocalClock from "./LocalClock";
 
 const FRAME_INITIAL_COUNT_DESKTOP = 24;
 const FRAME_INITIAL_COUNT_MOBILE = 16;
-const FRAME_BATCH_COUNT = 48;
+const FRAME_BATCH_COUNT = 32;
 const BACK_TO_TOP_THRESHOLD = 300;
 const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
 const DEFAULT_TAG = "默认";
 const HOME_CACHE_TTL = 2000;
 const HOME_STORAGE_CACHE_KEY = "van_nav_home_cache_v1";
+const IDLE_PREWARM_COUNT = 12;
 
 let homeDataCache: any = null;
 let homeDataCacheAt = 0;
 let homeDataInFlight: Promise<any> | null = null;
+const prewarmedLogoSet = new Set<string>();
 
 const mutiSearch = (s, t) => {
   const source = (s as string).toLowerCase();
@@ -283,6 +285,40 @@ const Content = () => {
   }, [searchString, onKeyEnter]);
 
   const renderedCards = useMemo(() => filteredData.slice(0, renderCount), [filteredData, renderCount]);
+
+  useEffect(() => {
+    if (searchString.trim() !== "") {
+      return;
+    }
+    const nextBatch = filteredData.slice(renderCount, renderCount + IDLE_PREWARM_COUNT);
+    if (nextBatch.length === 0) {
+      return;
+    }
+    const preload = () => {
+      nextBatch.forEach((item: any) => {
+        if (!item?.logo || item.url === "admin" || item.url === "toggleJumpTarget") {
+          return;
+        }
+        if (prewarmedLogoSet.has(item.logo)) {
+          return;
+        }
+        prewarmedLogoSet.add(item.logo);
+        const link = document.createElement("link");
+        link.rel = "prefetch";
+        link.as = "image";
+        link.href = `/api/img?url=${encodeURIComponent(item.logo)}`;
+        document.head.appendChild(link);
+      });
+    };
+    const idleCallback = (window as any).requestIdleCallback;
+    const cancelIdleCallback = (window as any).cancelIdleCallback;
+    if (typeof idleCallback === "function") {
+      const id = idleCallback(preload, { timeout: 1000 });
+      return () => cancelIdleCallback?.(id);
+    }
+    const timer = window.setTimeout(preload, 160);
+    return () => window.clearTimeout(timer);
+  }, [filteredData, renderCount, searchString]);
 
   const renderCardsV2 = useCallback(() => {
     return renderedCards.map((item, index) => {

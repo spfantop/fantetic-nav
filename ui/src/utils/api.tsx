@@ -3,7 +3,7 @@ import { getJumpTarget, initServerJumpTargetConfig } from "./setting";
 
 axios.interceptors.request.use(
     (config) => {
-        // 娴犲窅ocalStorage閼惧嘲褰噒oken楠炶埖鍧婇崝鐘插煂鐠囬攱鐪版径?
+        // 从 localStorage 读取 token 并自动附加到请求头
         const token = window.localStorage.getItem("_token");
         if (token) {
             config.headers.Authorization = token;
@@ -33,7 +33,7 @@ const blankJumpIcon = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMwAAADICAY
 export const FetchList = async () => {
     const { data: raw } = await axios.get(baseUrl);
     const { data } = raw;
-    // 閼惧嘲褰囬崚鍡欒
+    // 首页默认增加“全部工具”标签
     const catelogs = [];
     catelogs.push("全部工具")
     data.catelogs.forEach(item => {
@@ -65,7 +65,7 @@ export const FetchList = async () => {
     if (!data.setting?.hideToggleJumpTarget) {
         data.tools.push({
             id: 999099999978,
-            catelogs: "偏好设置",
+            catelog: "偏好设置",
             name: jumpTarget === "blank" ? "新建窗口" : "原地跳转",
             desc: `点击切换跳转方式`,
             url: "toggleJumpTarget",
@@ -99,7 +99,7 @@ export const fetchExportTools = async () => {
     const { data } = await axios.get(`/api/admin/exportTools`);
     return data?.data;
 };
-// 瀹搞儱鍙跨粻锛勬倞閹恒儱褰涢敍姘灩闂勩們鈧椒鎱ㄩ弨骞库偓浣规煀婢?
+// 删除工具
 export const fetchDeleteTool = async (id: number) => {
     const { data } = await axios.delete(`/api/admin/tool/${id}`);
     return data?.data || {};
@@ -112,7 +112,7 @@ export const fetchAddTool = async (payload: any) => {
     const { data } = await axios.post(`/api/admin/tool`, payload);
     return data?.data || {};
 };
-// 閸掑棛琚粻锛勬倞閹恒儱褰涢敍娑欐煀婢х偑鈧椒鎱ㄩ弨骞库偓浣稿灩闂?
+// 新增分类
 export const fetchAddCateLog = async (payload: any) => {
     const { data } = await axios.post(`/api/admin/catelog`, payload);
     return data?.data || {};
@@ -158,15 +158,15 @@ export const fetchUpdateToolsSort = async (updates: { id: number; sort: number }
     return data?.data || {};
 };
 
-// ==================== 閹兼粎鍌ㄥ鏇熸惛缁狅紕鎮婇幒銉ュ經 ====================
+// ==================== 搜索引擎管理 ====================
 
-// 閼惧嘲褰囬幍鈧張澶嬫偝缁便垹绱╅幙搴礄缁狅紕鎮婇崨妯兼暏閿?
+// 获取全部搜索引擎（管理端）
 export const fetchGetAllSearchEngines = async () => {
     const { data } = await axios.get(`/api/admin/searchEngine`);
     return data?.data || [];
 };
 
-// 閼惧嘲褰囬崥顖滄暏閻ㄥ嫭鎮崇槐銏犵穿閹垮函绱欓崜宥囶伂閹兼粎鍌ㄩ悽顭掔礆
+// 获取已启用搜索引擎（前台）
 export const fetchGetEnabledSearchEngines = async () => {
     const { data } = await axios.get(`/api/searchEngines`);
     return data?.data || [];
@@ -177,25 +177,25 @@ export const fetchBatchLogos = async (urls: string[]) => {
     return data?.data || {};
 };
 
-// 濞ｈ濮為幖婊呭偍瀵洘鎼?
+// 新增搜索引擎
 export const fetchAddSearchEngine = async (payload: any) => {
     const { data } = await axios.post(`/api/admin/searchEngine`, payload);
     return data?.data || {};
 };
 
-// 閺囧瓨鏌婇幖婊呭偍瀵洘鎼?
+// 更新搜索引擎
 export const fetchUpdateSearchEngine = async (payload: any) => {
     const { data } = await axios.put(`/api/admin/searchEngine/${payload.id}`, payload);
     return data?.data || {};
 };
 
-// 閸掔娀娅庨幖婊呭偍瀵洘鎼?
+// 删除搜索引擎
 export const fetchDeleteSearchEngine = async (id: number) => {
     const { data } = await axios.delete(`/api/admin/searchEngine/${id}`);
     return data?.data || {};
 };
 
-// 閺囧瓨鏌婇幖婊呭偍瀵洘鎼搁幒鎺戠碍
+// 批量更新搜索引擎排序
 export const fetchUpdateSearchEnginesSort = async (updates: { id: number; sort: number }[]) => {
     const { data } = await axios.put(`/api/admin/searchEngines/sort`, updates);
     return data?.data || {};
