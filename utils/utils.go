@@ -1,11 +1,11 @@
 package utils
 
 import (
-	"crypto/tls"
 	"database/sql"
 	"encoding/base64"
-	"io/ioutil"
+	"io"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"runtime/debug"
 	"strings"
@@ -40,6 +40,10 @@ func In(target string, str_array []string) bool {
 
 func GetImgBase64FromUrl(url string) string {
 	imgUrl := url
+	parsedURL, parseErr := neturl.Parse(imgUrl)
+	if parseErr != nil || parsedURL == nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
+		return ""
+	}
 	//获取远端图片
 	req, err := http.NewRequest("GET", imgUrl, nil)
 	if err != nil {
@@ -48,9 +52,7 @@ func GetImgBase64FromUrl(url string) string {
 	}
 	req.Header.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.88 Safari/537.36")
 	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		},
+		Timeout: 8 * time.Second,
 	}
 	res, err := client.Do(req)
 	if err != nil {
@@ -58,9 +60,20 @@ func GetImgBase64FromUrl(url string) string {
 		return ""
 	}
 	defer res.Body.Close()
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return ""
+	}
 
-	// 读取获取的[]byte数据
-	data, _ := ioutil.ReadAll(res.Body)
+	// 限制读取大小，避免超大响应导致内存压力
+	limitedBody := io.LimitReader(res.Body, 2*1024*1024)
+	data, readErr := io.ReadAll(limitedBody)
+	if readErr != nil {
+		CheckErr(readErr)
+		return ""
+	}
+	if len(data) == 0 {
+		return ""
+	}
 
 	imageBase64 := base64.StdEncoding.EncodeToString(data)
 	return imageBase64

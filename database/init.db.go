@@ -2,7 +2,9 @@ package database
 
 import (
 	"database/sql"
+	"os"
 	"path/filepath"
+	"strings"
 
 	_ "modernc.org/sqlite"
 
@@ -214,13 +216,28 @@ func InitDB() {
 	rows, err := DB.Query(sqlGetUser)
 	utils.CheckErr(err)
 	if !rows.Next() {
+		initPassword := strings.TrimSpace(os.Getenv("NAV_INIT_ADMIN_PASSWORD"))
+		if initPassword == "" {
+			generated := utils.RandomJWTKey()
+			if len(generated) >= 16 {
+				initPassword = generated[:16]
+			} else {
+				initPassword = "ChangeMeNow123!"
+			}
+			logger.LogInfo("未检测到 NAV_INIT_ADMIN_PASSWORD，已生成初始管理员密码: %s", initPassword)
+		}
+		hashedPassword, hashErr := utils.HashPassword(initPassword)
+		utils.CheckErr(hashErr)
+		if hashedPassword == "" {
+			hashedPassword = initPassword
+		}
 		sqlAddUser := `
 			INSERT INTO nav_user (id, name, password)
 			VALUES (?, ?, ?);
 		`
 		stmt, err := DB.Prepare(sqlAddUser)
 		utils.CheckErr(err)
-		res, err := stmt.Exec(utils.GenerateId(), "admin", "admin")
+		res, err := stmt.Exec(utils.GenerateId(), "admin", hashedPassword)
 		utils.CheckErr(err)
 		_, err = res.LastInsertId()
 		utils.CheckErr(err)

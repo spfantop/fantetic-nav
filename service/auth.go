@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+
 	"github.com/mereith/nav/database"
 	"github.com/mereith/nav/types"
 	"github.com/mereith/nav/utils"
@@ -30,6 +32,9 @@ func GetUser(name string) types.User {
 	var user types.User
 	row := database.DB.QueryRow(sql_get_user, name)
 	err := row.Scan(&user.Id, &user.Name, &user.Password)
+	if err == sql.ErrNoRows {
+		return types.User{}
+	}
 	utils.CheckErr(err)
 	return user
 }
@@ -49,6 +54,11 @@ func AddApiTokenInDB(data types.Token) {
 }
 
 func UpdateUser(data types.UpdateUserDto) {
+	hashedPassword, err := utils.HashPassword(data.Password)
+	utils.CheckErr(err)
+	if hashedPassword == "" {
+		return
+	}
 	sql_update_user := `
 		UPDATE nav_user
 		SET name = ?, password = ?
@@ -56,8 +66,24 @@ func UpdateUser(data types.UpdateUserDto) {
 		`
 	stmt, err := database.DB.Prepare(sql_update_user)
 	utils.CheckErr(err)
-	res, err := stmt.Exec(data.Name, data.Password, data.Id)
+	res, err := stmt.Exec(data.Name, hashedPassword, data.Id)
 	utils.CheckErr(err)
 	_, err = res.RowsAffected()
+	utils.CheckErr(err)
+}
+
+func UpdateUserPassword(id int, hashedPassword string) {
+	sqlUpdatePassword := `
+		UPDATE nav_user
+		SET password = ?
+		WHERE id = ?;
+	`
+	stmt, err := database.DB.Prepare(sqlUpdatePassword)
+	utils.CheckErr(err)
+	if stmt == nil {
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(hashedPassword, id)
 	utils.CheckErr(err)
 }

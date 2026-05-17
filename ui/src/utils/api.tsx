@@ -79,11 +79,22 @@ export const FetchList = async () => {
 
 
 
-export const login = async (username: string, password: string) => {
+export const login = async (
+    username: string,
+    password: string,
+    captcha?: { captchaId: string; captchaAnswer: string }
+) => {
     const { data } = await axios.post("/api/login", {
         name: username,
         password,
+        captchaId: captcha?.captchaId || "",
+        captchaAnswer: captcha?.captchaAnswer || "",
     });
+    return data;
+};
+
+export const fetchLoginCaptcha = async () => {
+    const { data } = await axios.get("/api/login/captcha");
     return data;
 };
 

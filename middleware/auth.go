@@ -21,8 +21,18 @@ func JWTMiddleware() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		rawToken = utils.ExtractToken(rawToken)
 
 		if database.HasApiToken(rawToken) {
+			token, err := utils.ParseJWT(rawToken)
+			if err != nil || !token.Valid {
+				c.JSON(http.StatusUnauthorized, gin.H{
+					"success":      false,
+					"errorMessage": "未登录",
+				})
+				c.Abort()
+				return
+			}
 			c.Set("username", "apiToken")
 			c.Set("uid", 1)
 			c.Next()

@@ -67,3 +67,11 @@
   background: #8a8a8a !important;
   border-color: #8a8a8a !important;
 }
+
+/* 与桌面端 body zoom:0.9 对齐，避免后台出现底部留白 */
+@media (min-width: 1060px) {
+  .admin-page-shell {
+    min-height: 111.12vh;
+    height: 111.12vh;
+  }
+}

@@ -482,6 +482,21 @@ func GetAdminAllDataHandler(c *gin.Context) {
 }
 
 func LoginHandler(c *gin.Context) {
+	clientIP := c.ClientIP()
+	status := service.GetLoginGuardStatus(clientIP)
+	if status.Locked {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"success":      false,
+			"errorMessage": "登录失败次数过多，请稍后再试",
+			"data": gin.H{
+				"locked":      true,
+				"needCaptcha": true,
+				"retryAfter":  status.RetryAfter,
+			},
+		})
+		return
+	}
+
 	var data types.LoginDto
 	if err := c.ShouldBindJSON(&data); err != nil {
 		utils.CheckErr(err)
@@ -491,21 +506,62 @@ func LoginHandler(c *gin.Context) {
 		})
 		return
 	}
+	if status.NeedCaptcha {
+		if data.CaptchaID == "" || data.CaptchaAnswer == "" || !service.VerifyLoginCaptcha(clientIP, data.CaptchaID, data.CaptchaAnswer) {
+			nextStatus := service.RecordLoginFailure(clientIP)
+			c.JSON(200, gin.H{
+				"success":      false,
+				"errorMessage": "验证码错误或已过期",
+				"data": gin.H{
+					"locked":      nextStatus.Locked,
+					"needCaptcha": true,
+					"retryAfter":  nextStatus.RetryAfter,
+				},
+			})
+			return
+		}
+	}
 	user := service.GetUser(data.Name)
 	if user.Name == "" {
+		nextStatus := service.RecordLoginFailure(clientIP)
 		c.JSON(200, gin.H{
 			"success":      false,
-			"errorMessage": "用户名不存在",
+			"errorMessage": "用户名或密码错误",
+			"data": gin.H{
+				"locked":      nextStatus.Locked,
+				"needCaptcha": nextStatus.NeedCaptcha,
+				"retryAfter":  nextStatus.RetryAfter,
+			},
 		})
 		return
 	}
-	if user.Password != data.Password {
+	validPassword := false
+	if utils.LooksLikeBcryptHash(user.Password) {
+		validPassword = utils.VerifyPassword(user.Password, data.Password)
+	} else {
+		// 兼容历史明文密码，登录成功后自动迁移为哈希存储
+		validPassword = user.Password == data.Password
+		if validPassword {
+			hashed, hashErr := utils.HashPassword(data.Password)
+			if hashErr == nil && hashed != "" {
+				service.UpdateUserPassword(user.Id, hashed)
+			}
+		}
+	}
+	if !validPassword {
+		nextStatus := service.RecordLoginFailure(clientIP)
 		c.JSON(200, gin.H{
 			"success":      false,
-			"errorMessage": "密码错误",
+			"errorMessage": "用户名或密码错误",
+			"data": gin.H{
+				"locked":      nextStatus.Locked,
+				"needCaptcha": nextStatus.NeedCaptcha,
+				"retryAfter":  nextStatus.RetryAfter,
+			},
 		})
 		return
 	}
+	service.RecordLoginSuccess(clientIP)
 	// 生成 token
 	token, err := utils.SignJWT(user)
 	utils.CheckErr(err)
@@ -519,6 +575,32 @@ func LoginHandler(c *gin.Context) {
 		},
 	})
 
+}
+
+func GetLoginCaptchaHandler(c *gin.Context) {
+	clientIP := c.ClientIP()
+	status := service.GetLoginGuardStatus(clientIP)
+	if status.Locked {
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"success":      false,
+			"errorMessage": "当前 IP 已临时封锁，请稍后再试",
+			"data": gin.H{
+				"locked":      true,
+				"needCaptcha": true,
+				"retryAfter":  status.RetryAfter,
+			},
+		})
+		return
+	}
+	id, question, expireIn := service.CreateLoginCaptcha(clientIP)
+	c.JSON(200, gin.H{
+		"success": true,
+		"data": gin.H{
+			"captchaId": id,
+			"imageData": question,
+			"expireIn":  expireIn,
+		},
+	})
 }
 
 // 退出登录

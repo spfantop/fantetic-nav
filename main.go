@@ -65,6 +65,8 @@ func main() {
 	database.InitDB()
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
+	_ = router.SetTrustedProxies(nil)
+	router.Use(middleware.SecurityHeadersMiddleware())
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedExtensions([]string{".png", ".jpg", ".jpeg", ".ico", ".svg"})))
 	//router.Use(gzip.Gzip(gzip.DefaultCompression))
 	// 嵌入文件夹
@@ -77,6 +79,7 @@ func main() {
 		// 获取用户信息
 
 		api.POST("/login", handler.LoginHandler)
+		api.GET("/login/captcha", handler.GetLoginCaptchaHandler)
 		api.GET("/logout", handler.LogoutHandler)
 		api.GET("/img", handler.GetLogoImgHandler)
 		api.POST("/img/batch", handler.GetLogoImgBatchHandler)

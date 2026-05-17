@@ -25,7 +25,7 @@ type Token struct {
 type User struct {
 	Id       int    `json:"id"`
 	Name     string `json:"name"`
-	Password string `json:"password"`
+	Password string `json:"-"`
 }
 
 type Img struct {

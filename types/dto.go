@@ -11,8 +11,10 @@ type UpdateUserDto struct {
 }
 
 type LoginDto struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+	Name          string `json:"name"`
+	Password      string `json:"password"`
+	CaptchaID     string `json:"captchaId"`
+	CaptchaAnswer string `json:"captchaAnswer"`
 }
 type AddTokenDto struct {
 	Name string `json:"name"`

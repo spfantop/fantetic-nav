@@ -63,9 +63,9 @@ export const AdminPage = () => {
   };
 
   return (
-    <div className="admin-page-shell min-h-screen bg-[#121212] text-[#e0e0e0]">
+    <div className="admin-page-shell h-screen overflow-hidden bg-[#121212] text-[#e0e0e0] flex flex-col">
       <header className="bg-[#1f1f1f] border-b border-[#303030]">
-        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <h1 className="text-xl font-semibold text-[#f1f1f1]">Nav 管理系统</h1>
@@ -91,11 +91,11 @@ export const AdminPage = () => {
         </div>
       </header>
 
-      <div className="flex flex-1 w-full mx-auto h-[calc(100vh-64px)]">
+      <div className="flex flex-1 w-full overflow-hidden min-h-0">
         <Sidebar items={menuItems} currentKey={currentKey} onChange={setCurrentKey} />
 
-        <main className="flex-1 overflow-auto bg-[#121212]">
-          <div className="p-4 h-full">
+        <main className="flex-1 overflow-hidden bg-[#121212] min-h-0">
+          <div className="px-4 pt-4 pb-0 h-full overflow-auto box-border">
             <Outlet />
           </div>
         </main>

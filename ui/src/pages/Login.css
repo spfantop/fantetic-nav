@@ -116,6 +116,48 @@
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
 }
 
+.captcha-row {
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.captcha-question {
+  color: rgba(244, 239, 231, 0.84);
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.captcha-image {
+  width: 160px;
+  height: 48px;
+  border: 1px solid #4a433b;
+  border-radius: 10px;
+  background: #1a1714;
+  object-fit: cover;
+}
+
+.captcha-refresh-btn {
+  border: 1px solid #4a433b;
+  background: #1a1714;
+  color: #e6d7c1;
+  border-radius: 10px;
+  height: 34px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.captcha-refresh-btn:hover:not(:disabled) {
+  border-color: #b9976a;
+}
+
+.captcha-refresh-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
 @media screen and (max-width: 768px) {
   .login-panel {
     grid-template-columns: 1fr;

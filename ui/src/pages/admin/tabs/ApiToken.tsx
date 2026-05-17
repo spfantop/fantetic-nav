@@ -1,5 +1,6 @@
 
 import { Button, Card, Form, Input, Modal, message, Popconfirm, Space, Spin, Table, Typography } from 'antd';
+import { DeleteOutlined } from '@ant-design/icons';
 import { useCallback, useState } from 'react';
 import { fetchAddApiToken, fetchDeleteApiToken } from '../../../utils/api';
 import { useData } from '../hooks/useData';
@@ -93,7 +94,7 @@ export const ApiToken: React.FC<ApiTokenProps> = (props) => {
           />
           <Table.Column
             title="操作"
-            width={40}
+            width={60}
             dataIndex="action"
             key="action"
             render={(_, record: any) => {
@@ -105,7 +106,7 @@ export const ApiToken: React.FC<ApiTokenProps> = (props) => {
                     }}
                     title={`确定要删除 Token ${record.name} 吗？`}
                   >
-                    <Button type="link">删除</Button>
+                    <Button type="text" danger icon={<DeleteOutlined />} />
                   </Popconfirm>
                 </Space>
               );

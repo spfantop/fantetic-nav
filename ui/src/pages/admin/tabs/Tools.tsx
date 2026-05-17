@@ -15,7 +15,12 @@ import {
   Tooltip,
   Switch
 } from "antd";
-import { QuestionCircleOutlined, HolderOutlined } from '@ant-design/icons';
+import {
+  QuestionCircleOutlined,
+  HolderOutlined,
+  EditOutlined,
+  DeleteOutlined,
+} from '@ant-design/icons';
 import React, { useCallback, useState, useEffect, useContext, useMemo } from "react";
 import { getFilter, getOptions, mutiSearch } from "../../../utils/admin";
 import {
@@ -323,6 +328,8 @@ export const Tools: React.FC<ToolsProps> = (props) => {
       extra={
         <Space>
           <Select
+            size="large"
+            style={{ width: 160 }}
             options={getOptions(store?.catelogs || [])}
             placeholder="分类筛选"
             allowClear
@@ -335,6 +342,8 @@ export const Tools: React.FC<ToolsProps> = (props) => {
             }}
           />
           <Input.Search
+            size="large"
+            style={{ width: 220 }}
             allowClear
             onSearch={(s: string) => {
               setSearchString(s.trim());
@@ -489,28 +498,27 @@ export const Tools: React.FC<ToolsProps> = (props) => {
               }} />
               <Table.Column
                 title="操作"
-                width={40}
+                width={80}
                 dataIndex="action"
                 key="action"
                 render={(_, record: any) => {
                   return (
                     <Space>
                       <Button
-                        type="link"
+                        type="text"
+                        icon={<EditOutlined />}
                         onClick={() => {
                           updateForm.setFieldsValue(record);
                           setShowEdit(true);
                         }}
-                      >
-                        修改
-                      </Button>
+                      />
                       <Popconfirm
                         onConfirm={() => {
                           handleDelete(record.id);
                         }}
                         title={`确定要删除 ${record.name} 吗？`}
                       >
-                        <Button type="link">删除</Button>
+                        <Button type="text" danger icon={<DeleteOutlined />} />
                       </Popconfirm>
                     </Space>
                   );

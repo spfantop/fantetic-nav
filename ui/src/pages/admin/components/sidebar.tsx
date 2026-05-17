@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 export interface MenuItem {
@@ -16,21 +16,69 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange }) => {
   const location = useLocation();
-
-  const [expanded, setExpanded] = useState(() => {
-    const saved = localStorage.getItem('admin-sidebar-expanded');
-    return saved ? JSON.parse(saved) : false;
+  const SIDEBAR_MIN_WIDTH = 64;
+  const SIDEBAR_COLLAPSE_WIDTH = 82;
+  const SIDEBAR_MAX_WIDTH = 320;
+  const SIDEBAR_DEFAULT_WIDTH = 220;
+  const [sidebarWidth, setSidebarWidth] = useState(() => {
+    const saved = Number(localStorage.getItem('admin-sidebar-width') || SIDEBAR_DEFAULT_WIDTH);
+    if (Number.isNaN(saved)) return SIDEBAR_DEFAULT_WIDTH;
+    return Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, saved));
   });
+  const [dragging, setDragging] = useState(false);
+  const rafRef = useRef<number | null>(null);
+  const pendingWidthRef = useRef<number | null>(null);
+  const expanded = sidebarWidth > SIDEBAR_COLLAPSE_WIDTH;
 
   useEffect(() => {
-    localStorage.setItem('admin-sidebar-expanded', JSON.stringify(expanded));
-  }, [expanded]);
+    localStorage.setItem('admin-sidebar-width', String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  useEffect(() => {
+    if (!dragging) return;
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = 'none';
+    const flushWidth = () => {
+      rafRef.current = null;
+      if (pendingWidthRef.current !== null) {
+        setSidebarWidth(pendingWidthRef.current);
+      }
+    };
+    const onMove = (e: PointerEvent) => {
+      const next = Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, e.clientX));
+      pendingWidthRef.current = next;
+      if (rafRef.current === null) {
+        rafRef.current = window.requestAnimationFrame(flushWidth);
+      }
+    };
+    const onUp = () => {
+      setDragging(false);
+      if (rafRef.current !== null) {
+        window.cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      document.body.style.userSelect = previousUserSelect;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [dragging]);
+
+  const handleResizeDoubleClick = () => {
+    if (sidebarWidth <= SIDEBAR_COLLAPSE_WIDTH) {
+      setSidebarWidth(SIDEBAR_DEFAULT_WIDTH);
+      return;
+    }
+    setSidebarWidth(SIDEBAR_MIN_WIDTH);
+  };
 
   return (
     <div
-      className={`h-full bg-[#1f1f1f] border-r border-[#303030] transition-all duration-300 relative ${
-        expanded ? 'w-64' : 'w-20'
-      }`}
+      className={`h-full bg-[#1f1f1f] border-r border-[#303030] relative ${dragging ? '' : 'transition-all duration-150'}`}
+      style={{ width: sidebarWidth }}
     >
       <nav className="pt-4 relative h-full">
         {items.map((item) => (
@@ -50,14 +98,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
             {expanded && <span className="ml-3 truncate">{item.label}</span>}
           </Link>
         ))}
-        <button
-          onClick={() => setExpanded(!expanded)}
-          className="absolute bottom-5 -right-3 p-2 hover:bg-[#2a2a2a] rounded-full
-          bg-[#1f1f1f] border border-[#303030] shadow-sm z-50 w-6 h-6
-          flex items-center justify-center text-xs text-[#e0e0e0]"
-        >
-          {expanded ? '<' : '>'}
-        </button>
 
         <a
           href="https://github.com/mereithhh/van-nav"
@@ -75,6 +115,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
           {expanded && <span className="ml-2">GitHub</span>}
         </a>
       </nav>
+      <div
+        aria-label="resize sidebar"
+        onPointerDown={() => setDragging(true)}
+        onDoubleClick={handleResizeDoubleClick}
+        className="absolute top-0 right-0 h-full w-2 cursor-col-resize z-50 group flex items-center justify-center"
+        title="双击收起/恢复默认宽度"
+      >
+        <div className="h-8 w-[1px] rounded-full bg-[#3f3f3f] group-hover:bg-[#686868] transition-colors" />
+      </div>
     </div>
   );
 };
