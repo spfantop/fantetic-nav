@@ -79,6 +79,14 @@ export const AdminPage = () => {
                 <HomeIcon className="w-4 h-4 mr-2" />
                 返回主页
               </Link>
+              <Link
+                to={{ pathname: "/", search: "?edit=1" }}
+                state={{ fromAdmin: true }}
+                className="flex items-center px-3 py-2 text-sm text-[#cfcfcf] hover:text-[#ffffff]"
+              >
+                <TableIcon className="w-4 h-4 mr-2" />
+                视图调整
+              </Link>
               <button
                 onClick={handleLogout}
                 className="flex items-center px-3 py-2 text-sm text-[#cfcfcf] hover:text-[#ffffff]"

@@ -912,3 +912,102 @@
     right: max(10px, calc((100vw - 1170px) / 2 - 42px));
   }
 }
+
+.home-edit-actions {
+  display: none;
+}
+
+.home-edit-btn {
+  border: 1px solid #545454;
+  background: rgba(31, 31, 31, 0.75);
+  color: #d7d7d7;
+  border-radius: 8px;
+  padding: 4px 10px;
+  cursor: pointer;
+}
+
+.home-edit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.home-edit-btn-primary {
+  border-color: #6d9eff;
+  color: #dbe7ff;
+}
+
+.edit-tag-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.editable-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  touch-action: none;
+}
+
+.editable-tag.is-dragging {
+  opacity: 0.45;
+}
+
+.editable-tag.is-target {
+  outline: 1px dashed #8ab4ff;
+}
+
+.editable-tag-label {
+  line-height: 1;
+}
+
+.editable-card-shell {
+  position: relative;
+  touch-action: none;
+  cursor: grab;
+}
+
+.editable-card-shell .card-box,
+.editable-card-shell .card-box img {
+  -webkit-user-drag: none;
+}
+
+.editable-card-shell .card-box,
+.editable-card-shell .card-box * {
+  pointer-events: none;
+}
+
+.editable-card-shell:active {
+  cursor: grabbing;
+}
+
+.editable-card-shell.is-dragging {
+  opacity: 0.35;
+}
+
+.editable-card-shell.is-target .card-box {
+  outline: 1px dashed #8ab4ff;
+}
+
+.drag-overlay-card {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99;
+  border: 1px solid #719dff;
+  background: rgba(31, 31, 31, 0.92);
+  color: #dce7ff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.home-edit-floating-actions {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 120;
+  display: flex;
+  gap: 8px;
+}

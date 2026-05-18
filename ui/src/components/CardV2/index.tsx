@@ -7,7 +7,7 @@ const loadedImageSrcCache = new Set<string>();
 const failedImageSrcCache = new Set<string>();
 const EAGER_LOAD_COUNT = 10;
 
-const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noImageMode, compactMode }) => {
+const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noImageMode, compactMode, showCatelog = true }) => {
   const cardRef = useRef<HTMLAnchorElement | null>(null);
   const imageSrc = useMemo(() => {
     return url === "admin" ? logo : getLogoUrl(logo);
@@ -98,7 +98,6 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
           alt={title}
           loading={shouldEagerLoad ? "eager" : "lazy"}
           decoding="async"
-          fetchPriority={isInView ? "high" : "low"}
           onLoad={handleImageLoad}
           onError={handleImageError}
           style={{
@@ -139,7 +138,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
         <div className="card-right">
           <div className="card-right-top">
             <span className="card-right-title" title={title}>{title}</span>
-            {!compactMode && <span className="card-tag" title={displayCatelog}>{displayCatelog}</span>}
+            {!compactMode && showCatelog && <span className="card-tag" title={displayCatelog}>{displayCatelog}</span>}
           </div>
           {!compactMode && <div className="card-right-bottom" title={des}>{des}</div>}
         </div>

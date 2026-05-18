@@ -850,6 +850,33 @@ func UpdateToolsSortHandler(c *gin.Context) {
 	})
 }
 
+func UpdateToolsAllSortHandler(c *gin.Context) {
+	var updates []types.UpdateToolsAllSortDto
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		utils.CheckErr(err)
+		c.JSON(http.StatusBadRequest, gin.H{
+			"success":      false,
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+
+	err := service.UpdateToolsAllSort(updates)
+	if err != nil {
+		utils.CheckErr(err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"success": true,
+		"message": "更新全部工具排序成功",
+	})
+}
+
 // ==================== 搜索引擎相关处理函数 ====================
 
 // 获取所有搜索引擎

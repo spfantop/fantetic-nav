@@ -46,12 +46,12 @@ func UpdateTool(data types.UpdateToolDto) {
 	// 除了更新工具本身之外，也要更新 img 表
 	sql_update_tool := `
 		UPDATE nav_table
-		SET name = ?, url = ?, logo = ?, catelog = ?, desc = ?, sort = ?, hide = ?
+		SET name = ?, url = ?, logo = ?, catelog = ?, desc = ?, sort = ?, allSort = ?, hide = ?
 		WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_update_tool)
 	utils.CheckErr(err)
-	res, err := stmt.Exec(data.Name, data.Url, data.Logo, data.Catelog, data.Desc, data.Sort, data.Hide, data.Id)
+	res, err := stmt.Exec(data.Name, data.Url, data.Logo, data.Catelog, data.Desc, data.Sort, data.Sort, data.Hide, data.Id)
 	utils.CheckErr(err)
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
@@ -76,8 +76,8 @@ func AddTool(data types.AddToolDto) (int64, error) {
 	}()
 
 	sql_add_tool := `
-		INSERT INTO nav_table (name, url, logo, catelog, desc, sort, hide)
-		VALUES (?, ?, ?, ?, ?, ?, ?);
+		INSERT INTO nav_table (name, url, logo, catelog, desc, sort, allSort, hide)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 		`
 	stmt, err := tx.Prepare(sql_add_tool)
 	if err != nil {
@@ -85,7 +85,7 @@ func AddTool(data types.AddToolDto) (int64, error) {
 	}
 	defer stmt.Close()
 
-	res, err := stmt.Exec(data.Name, data.Url, data.Logo, data.Catelog, data.Desc, data.Sort, data.Hide)
+	res, err := stmt.Exec(data.Name, data.Url, data.Logo, data.Catelog, data.Desc, data.Sort, data.Sort, data.Hide)
 	if err != nil {
 		return 0, err
 	}
@@ -111,7 +111,7 @@ func AddTool(data types.AddToolDto) (int64, error) {
 
 func GetAllTool() []types.Tool {
 	sql_get_all := `
-		SELECT id,name,url,logo,catelog,desc,sort,hide FROM nav_table order by sort;
+		SELECT id,name,url,logo,catelog,desc,sort,allSort,hide FROM nav_table order by sort;
 		`
 	results := make([]types.Tool, 0)
 	rows, err := database.DB.Query(sql_get_all)
@@ -120,7 +120,8 @@ func GetAllTool() []types.Tool {
 		var tool types.Tool
 		var hide interface{}
 		var sort interface{}
-		err = rows.Scan(&tool.Id, &tool.Name, &tool.Url, &tool.Logo, &tool.Catelog, &tool.Desc, &sort, &hide)
+		var allSort interface{}
+		err = rows.Scan(&tool.Id, &tool.Name, &tool.Url, &tool.Logo, &tool.Catelog, &tool.Desc, &sort, &allSort, &hide)
 		if hide == nil {
 			tool.Hide = false
 		} else {
@@ -135,6 +136,12 @@ func GetAllTool() []types.Tool {
 		} else {
 			i64 := sort.(int64)
 			tool.Sort = int(i64)
+		}
+		if allSort == nil {
+			tool.AllSort = tool.Sort
+		} else {
+			i64 := allSort.(int64)
+			tool.AllSort = int(i64)
 		}
 		utils.CheckErr(err)
 		results = append(results, tool)
@@ -183,6 +190,31 @@ func UpdateToolsSort(updates []types.UpdateToolsSortDto) error {
 
 	for _, update := range updates {
 		_, err = stmt.Exec(update.Sort, update.Id)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	return tx.Commit()
+}
+
+func UpdateToolsAllSort(updates []types.UpdateToolsAllSortDto) error {
+	tx, err := database.DB.Begin()
+	if err != nil {
+		return err
+	}
+
+	sql := `UPDATE nav_table SET allSort = ? WHERE id = ?`
+	stmt, err := tx.Prepare(sql)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	defer stmt.Close()
+
+	for _, update := range updates {
+		_, err = stmt.Exec(update.AllSort, update.Id)
 		if err != nil {
 			tx.Rollback()
 			return err

@@ -106,9 +106,13 @@ func InitDB() {
 	if !columnExists("nav_table", "sort") {
 		DB.Exec(`ALTER TABLE nav_table ADD COLUMN sort INTEGER;`)
 	}
+	if !columnExists("nav_table", "allSort") {
+		DB.Exec(`ALTER TABLE nav_table ADD COLUMN allSort INTEGER;`)
+	}
 	if !columnExists("nav_table", "hide") {
 		DB.Exec(`ALTER TABLE nav_table ADD COLUMN hide BOOLEAN;`)
 	}
+	DB.Exec(`UPDATE nav_table SET allSort = sort WHERE allSort IS NULL;`)
 
 	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_catelog (
@@ -218,13 +222,8 @@ func InitDB() {
 	if !rows.Next() {
 		initPassword := strings.TrimSpace(os.Getenv("NAV_INIT_ADMIN_PASSWORD"))
 		if initPassword == "" {
-			generated := utils.RandomJWTKey()
-			if len(generated) >= 16 {
-				initPassword = generated[:16]
-			} else {
-				initPassword = "ChangeMeNow123!"
-			}
-			logger.LogInfo("未检测到 NAV_INIT_ADMIN_PASSWORD，已生成初始管理员密码: %s", initPassword)
+			initPassword = "admin"
+			logger.LogInfo("未检测到 NAV_INIT_ADMIN_PASSWORD，使用默认管理员密码: admin")
 		}
 		hashedPassword, hashErr := utils.HashPassword(initPassword)
 		utils.CheckErr(hashErr)

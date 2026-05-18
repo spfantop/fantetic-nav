@@ -168,6 +168,10 @@ export const fetchUpdateToolsSort = async (updates: { id: number; sort: number }
     const { data } = await axios.put(`/api/admin/tools/sort`, updates);
     return data?.data || {};
 };
+export const fetchUpdateToolsAllSort = async (updates: { id: number; allSort: number }[]) => {
+    const { data } = await axios.put(`/api/admin/tools/all-sort`, updates);
+    return data?.data || {};
+};
 
 // ==================== 搜索引擎管理 ====================
 
