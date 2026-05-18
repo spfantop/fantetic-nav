@@ -1,4 +1,4 @@
-﻿export interface SortUpdateItem {
+export interface SortUpdateItem {
   id: number;
   sort: number;
 }

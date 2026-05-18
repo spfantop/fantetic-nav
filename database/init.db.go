@@ -32,6 +32,9 @@ func InitDB() {
 	dbPath = dbPath + "?_journal=WAL&_timeout=5000&_busy_timeout=5000&_txlock=immediate"
 	DB, err = sql.Open("sqlite", dbPath)
 	utils.CheckErr(err)
+	DB.Exec(`PRAGMA journal_mode=WAL;`)
+	DB.Exec(`PRAGMA synchronous=NORMAL;`)
+	DB.Exec(`PRAGMA busy_timeout=5000;`)
 
 	sqlCreateTable := `
 		CREATE TABLE IF NOT EXISTS nav_user (
@@ -113,6 +116,10 @@ func InitDB() {
 		DB.Exec(`ALTER TABLE nav_table ADD COLUMN hide BOOLEAN;`)
 	}
 	DB.Exec(`UPDATE nav_table SET allSort = sort WHERE allSort IS NULL;`)
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_table_sort ON nav_table(sort);`)
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_table_all_sort ON nav_table(allSort);`)
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_table_catelog ON nav_table(catelog);`)
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_table_hide ON nav_table(hide);`)
 
 	sqlCreateTable = `
 		CREATE TABLE IF NOT EXISTS nav_catelog (
@@ -129,6 +136,8 @@ func InitDB() {
 	if !columnExists("nav_catelog", "hide") {
 		DB.Exec(`ALTER TABLE nav_catelog ADD COLUMN hide BOOLEAN;`)
 	}
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_catelog_sort ON nav_catelog(sort);`)
+	DB.Exec(`CREATE INDEX IF NOT EXISTS idx_nav_catelog_hide ON nav_catelog(hide);`)
 	migration_2024_12_13()
 
 	sqlCreateTable = `

@@ -1,8 +1,8 @@
 import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { App as AntApp, Spin } from 'antd';
 import { applyTheme } from './utils/theme';
 import { isLogin } from './utils/check';
+import { Loading } from './components/Loading';
 import './App.css';
 
 const Home = React.lazy(() => import('./pages/Home'));
@@ -14,6 +14,7 @@ const ApiToken = React.lazy(() => import('./pages/admin/tabs/ApiToken').then(m =
 const Setting = React.lazy(() => import('./pages/admin/tabs/Setting').then(m => ({ default: m.Setting })));
 const SearchEngine = React.lazy(() => import('./pages/admin/tabs/Search'));
 const NotFound = React.lazy(() => import('./pages/NotFound'));
+const AntdShell = React.lazy(() => import('./components/AntdShell'));
 
 const getPageBackgroundColor = () => '#121212';
 
@@ -37,7 +38,7 @@ const LoadingFallback = () => (
       transition: 'background-color 0.3s',
     }}
   >
-    <Spin size="large" tip="加载中..." />
+    <Loading />
   </div>
 );
 
@@ -47,41 +48,48 @@ function App() {
   }, []);
 
   return (
-    <AntApp>
-      <div
-        style={{
-          minHeight: '100vh',
-          backgroundColor: getPageBackgroundColor(),
-          transition: 'background-color 0.3s',
-        }}
-      >
-        <Router>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<Login />} />
-              <Route
-                path="/admin"
-                element={
-                  <RequireAuth>
+    <div
+      style={{
+        minHeight: '100vh',
+        backgroundColor: getPageBackgroundColor(),
+        transition: 'background-color 0.3s',
+      }}
+    >
+      <Router>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route
+              path="/login"
+              element={
+                <AntdShell>
+                  <Login />
+                </AntdShell>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireAuth>
+                  <AntdShell>
                     <AdminPage />
-                  </RequireAuth>
-                }
-              >
-                <Route index element={<Tools />} />
-                <Route path="tools" element={<Tools />} />
-                <Route path="categories" element={<Catelog />} />
-                <Route path="search-engines" element={<SearchEngine />} />
-                <Route path="api-token" element={<ApiToken />} />
-                <Route path="settings" element={<Setting />} />
-                <Route path="*" element={<NotFound />} />
-              </Route>
+                  </AntdShell>
+                </RequireAuth>
+              }
+            >
+              <Route index element={<Tools />} />
+              <Route path="tools" element={<Tools />} />
+              <Route path="categories" element={<Catelog />} />
+              <Route path="search-engines" element={<SearchEngine />} />
+              <Route path="api-token" element={<ApiToken />} />
+              <Route path="settings" element={<Setting />} />
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
-        </Router>
-      </div>
-    </AntApp>
+            </Route>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </Router>
+    </div>
   );
 }
 

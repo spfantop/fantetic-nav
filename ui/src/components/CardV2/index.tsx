@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { memo, useMemo, useState, useEffect, useCallback, useRef } from "react";
 import "./index.css";
 import { getLogoUrl } from "../../utils/check";
 import { getJumpTarget } from "../../utils/setting";
@@ -147,4 +147,4 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
   );
 };
 
-export default Card;
+export default memo(Card);

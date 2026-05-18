@@ -5,6 +5,7 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"sort"
@@ -327,14 +328,34 @@ func GetAllHandler(c *gin.Context) {
 	}
 	setting := service.GetSetting()
 	siteConfig := service.GetSiteConfig()
+
+	cachePayload := gin.H{
+		"tools":      tools,
+		"catelogs":   catelogs,
+		"setting":    setting,
+		"siteConfig": siteConfig,
+	}
+	etagBytes, _ := json.Marshal(cachePayload)
+	etagHash := sha1.Sum(etagBytes)
+	etag := "\"" + hex.EncodeToString(etagHash[:]) + "\""
+	lastModified := etagLastModified(etag)
+	c.Header("Cache-Control", "private, max-age=0, must-revalidate")
+	c.Header("ETag", etag)
+	c.Header("Last-Modified", lastModified.Format(http.TimeFormat))
+	if strings.TrimSpace(c.GetHeader("If-None-Match")) == etag {
+		c.Status(http.StatusNotModified)
+		return
+	}
+	if ifModifiedSince := c.GetHeader("If-Modified-Since"); ifModifiedSince != "" {
+		if t, err := time.Parse(http.TimeFormat, ifModifiedSince); err == nil && !lastModified.After(t.UTC()) {
+			c.Status(http.StatusNotModified)
+			return
+		}
+	}
+
 	c.JSON(200, gin.H{
 		"success": true,
-		"data": gin.H{
-			"tools":      tools,
-			"catelogs":   catelogs,
-			"setting":    setting,
-			"siteConfig": siteConfig,
-		},
+		"data":    cachePayload,
 	})
 }
 

@@ -1,7 +1,6 @@
-﻿import "./index.css";
+import "./index.css";
 import { Helmet } from "react-helmet";
-import { message } from "antd";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import pinyin from "pinyin-match";
 import CardV2 from "../CardV2";
 import SearchBar from "../SearchBar";
@@ -11,6 +10,7 @@ import LocalClock from "./LocalClock";
 import EditableCard from "./EditableCard";
 import EditableTag from "./EditableTag";
 import {
+  clearHomeEtagCache,
   FetchList,
   fetchUpdateCatelogsSort,
   fetchUpdateToolsAllSort,
@@ -18,10 +18,10 @@ import {
 } from "../../utils/api";
 import { generateSearchEngineCard } from "../../utils/serachEngine";
 import { toggleJumpTarget } from "../../utils/setting";
+import { notifyError, notifyInfo, notifySuccess } from "../../utils/notify";
 import {
   buildSortUpdates,
   mergeVisibleOrderIntoGlobalOrder,
-  orderByIds,
   swapByIds,
 } from "./reorder";
 
@@ -33,7 +33,7 @@ const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
 const DEFAULT_TAG = "默认";
 const HOME_CACHE_TTL = 2000;
-const HOME_STORAGE_CACHE_KEY = "van_nav_home_cache_v1";
+const HOME_STORAGE_CACHE_KEY_BASE = "van_nav_home_cache_v2";
 const TAG_ORDER_STORAGE_KEY = "van_nav_tag_order_v1";
 const IDLE_PREWARM_COUNT = 12;
 const FIXED_TAIL_TOOL_URLS = ["admin", "toggleJumpTarget"];
@@ -42,6 +42,7 @@ let homeDataCache: any = null;
 let homeDataCacheAt = 0;
 let homeDataInFlight: Promise<any> | null = null;
 const prewarmedLogoSet = new Set<string>();
+const getHomeStorageCacheKey = () => `${HOME_STORAGE_CACHE_KEY_BASE}:${window.localStorage.getItem("_token") ? "auth" : "guest"}`;
 
 const mutiSearch = (s: string, t: string) => {
   const source = String(s || "").toLowerCase();
@@ -71,7 +72,7 @@ const fetchHomeData = async () => {
 
 const readHomeStorageCache = () => {
   try {
-    const raw = window.localStorage.getItem(HOME_STORAGE_CACHE_KEY);
+    const raw = window.localStorage.getItem(getHomeStorageCacheKey());
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -80,7 +81,7 @@ const readHomeStorageCache = () => {
 
 const writeHomeStorageCache = (payload: any) => {
   try {
-    window.localStorage.setItem(HOME_STORAGE_CACHE_KEY, JSON.stringify(payload));
+    window.localStorage.setItem(getHomeStorageCacheKey(), JSON.stringify(payload));
   } catch {
     // 忽略缓存写入失败，避免影响主流程。
   }
@@ -203,6 +204,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const [cardTargetId, setCardTargetId] = useState<string | null>(null);
   const [draggingTagId, setDraggingTagId] = useState<string | null>(null);
   const [tagTargetId, setTagTargetId] = useState<string | null>(null);
+  const deferredSearchString = useDeferredValue(searchString);
 
   const filteredDataRef = useRef<any[]>([]);
   const renderRafRef = useRef<number | null>(null);
@@ -210,6 +212,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const originalSnapshotRef = useRef<{ tools: any[]; tags: string[] } | null>(null);
   const cardDragRef = useRef<CardDragSession | null>(null);
   const tagDragRef = useRef<TagDragSession | null>(null);
+  const firstPaintLoggedRef = useRef(false);
 
   const applyTagFromData = useCallback((nextData: any) => {
     const tagInLocalStorage = window.localStorage.getItem("tag");
@@ -232,6 +235,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   }, []);
 
   const loadData = useCallback(async () => {
+    const perfStart = typeof performance !== "undefined" ? performance.now() : 0;
     const localCacheData = normalizeHomeData(readHomeStorageCache());
     if (localCacheData) {
       const localTagOrder = readTagOrder();
@@ -247,7 +251,11 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       if (!localCacheData) {
         setLoading(true);
       }
-      const result = normalizeHomeData(await fetchHomeData());
+      const fetched = await fetchHomeData();
+      if (!fetched) {
+        return;
+      }
+      const result = normalizeHomeData(fetched);
       const localTagOrder = readTagOrder();
       const normalizedTags = mergeTagOrder(sortTags(result.catelogs ?? [ALL_TOOLS_TAG]), localTagOrder);
       setData(result);
@@ -258,6 +266,10 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     } catch (error) {
       console.error("加载首页数据失败:", error);
     } finally {
+      if (process.env.NODE_ENV !== "production" && perfStart) {
+        const cost = Math.round(performance.now() - perfStart);
+        console.info(`[perf] 首页 loadData 耗时: ${cost}ms`);
+      }
       setLoading(false);
     }
   }, [applyTagFromData]);
@@ -265,6 +277,19 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useEffect(() => {
+    if (loading || firstPaintLoggedRef.current) {
+      return;
+    }
+    firstPaintLoggedRef.current = true;
+    if (process.env.NODE_ENV !== "production") {
+      requestAnimationFrame(() => {
+        const cards = filteredDataRef.current.length;
+        console.info(`[perf] 首页首次可渲染完成，卡片数: ${cards}`);
+      });
+    }
+  }, [loading]);
 
   useEffect(() => {
     if (!editMode) {
@@ -295,7 +320,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     if (searchString.trim()) {
       setVal("");
       setSearchString("");
-      message.info("编辑模式下已关闭搜索，避免只排序过滤结果。");
+      notifyInfo("编辑模式下已关闭搜索，避免只排序过滤结果。");
     }
   }, [editMode, searchString]);
 
@@ -306,7 +331,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         return;
       }
       try {
-        const cards = await generateSearchEngineCard(searchString);
+        const cards = await generateSearchEngineCard(deferredSearchString);
         setSearchEngineCards(cards);
       } catch (error) {
         console.error("加载搜索引擎卡片失败:", error);
@@ -315,7 +340,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     };
 
     loadSearchEngineCards();
-  }, [searchString, editMode]);
+  }, [deferredSearchString, editMode]);
 
   const handleSetCurrTag = (tag: string) => {
     setCurrTag(tag);
@@ -371,15 +396,19 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         return item.catelog === currTag;
       })
       .filter((item: any) => {
-        if (searchString === "") {
+        if (deferredSearchString === "") {
           return true;
         }
-        return mutiSearch(item.name, searchString) || mutiSearch(item.desc, searchString) || mutiSearch(item.url, searchString);
+        return (
+          mutiSearch(item.name, deferredSearchString) ||
+          mutiSearch(item.desc, deferredSearchString) ||
+          mutiSearch(item.url, deferredSearchString)
+        );
       });
 
     const extraCards = Array.isArray(searchEngineCards) ? searchEngineCards : [];
     return editMode ? localResult : [...localResult, ...extraCards];
-  }, [toolsSource, currTag, searchString, searchEngineCards, editMode]);
+  }, [toolsSource, currTag, deferredSearchString, searchEngineCards, editMode]);
 
   useEffect(() => {
     filteredDataRef.current = filteredData;
@@ -435,13 +464,13 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   );
 
   useEffect(() => {
-    if (searchString.trim() === "" || editMode) {
+    if (deferredSearchString.trim() === "" || editMode) {
       document.removeEventListener("keydown", onKeyEnter);
     } else {
       document.addEventListener("keydown", onKeyEnter);
     }
     return () => document.removeEventListener("keydown", onKeyEnter);
-  }, [searchString, onKeyEnter, editMode]);
+  }, [deferredSearchString, onKeyEnter, editMode]);
 
   const renderedCards = useMemo(() => filteredData.slice(0, renderCount), [filteredData, renderCount]);
 
@@ -578,21 +607,24 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
           return item.key === "allSort" && status === 404;
         });
         if (hasAllSort404) {
-          message.error("保存失败：后端未启用“全部工具排序”接口，请重启后端服务后重试。");
+          notifyError("保存失败：后端未启用“全部工具排序”接口，请重启后端服务后重试。");
           return;
         }
         const hasSqliteBusy = failed.some((item) => String((item.result.reason as any)?.response?.data?.errorMessage ?? "").includes("SQLITE_BUSY"));
         if (hasSqliteBusy) {
-          message.error("保存失败：数据库繁忙，请稍后重试（已改为串行提交，若仍出现请重启后端）。");
+          notifyError("保存失败：数据库繁忙，请稍后重试（已改为串行提交，若仍出现请重启后端）。");
           return;
         }
         const failKeys = failed.map((item) => item.key).join("、");
-        message.error(`保存失败：${failKeys} 提交失败，请重试。`);
+        notifyError(`保存失败：${failKeys} 提交失败，请重试。`);
         return;
       }
 
       writeTagOrder(draftTagOrder);
-      message.success("布局顺序已保存");
+      clearHomeEtagCache();
+      homeDataCache = null;
+      homeDataCacheAt = 0;
+      notifySuccess("布局顺序已保存");
       onLeaveEdit?.();
       setDirtyTools(false);
       setDirtyTags(false);
@@ -601,7 +633,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       await loadData();
     } catch (error) {
       console.error("保存布局失败:", error);
-      message.error("保存失败，已保留当前草稿，请重试");
+      notifyError("保存失败，已保留当前草稿，请重试");
     } finally {
       setSavingOrder(false);
     }

@@ -1,6 +1,8 @@
 .main {
     margin: 0 auto;
-    height: 96vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
     box-sizing: border-box;
 }

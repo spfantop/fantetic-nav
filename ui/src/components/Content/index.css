@@ -564,7 +564,9 @@
   overflow-y: scroll;
   -ms-overflow-style: none; /* IE 10+ */
   scrollbar-width: none; /* firefox */
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
 }
 .cards {
   padding-top: 10px;

@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Van Nav" />
+    <link rel="manifest" href="/manifest.json" />
+    <link rel="icon" href="/logo192.png" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    <link rel="stylesheet" href="https://npm.elemecdn.com/lxgw-wenkai-webfont@1.1.0/lxgwwenkai-regular.css" />
+    <script>
+      const mode = window.localStorage.getItem("theme");
+      if (mode === "dark") {
+        const el = document.querySelector("body");
+        if (el) {
+          el.classList.toggle("dark-mode", true);
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>需要启用 JavaScript 才能运行此应用。</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>
