@@ -71,10 +71,21 @@ const fetchHomeData = async () => {
 };
 
 const readHomeStorageCache = () => {
+  const cacheKey = getHomeStorageCacheKey();
   try {
-    const raw = window.localStorage.getItem(getHomeStorageCacheKey());
-    return raw ? JSON.parse(raw) : null;
+    const raw = window.localStorage.getItem(cacheKey);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!hasUsableHomeData(parsed)) {
+      // 缓存结构异常时立即删除，避免后续反复命中坏缓存。
+      window.localStorage.removeItem(cacheKey);
+      return null;
+    }
+    return parsed;
   } catch {
+    window.localStorage.removeItem(cacheKey);
     return null;
   }
 };
@@ -104,6 +115,15 @@ const normalizeHomeData = (payload: any) => {
     catelogs,
     tools: Array.isArray(payload.tools) ? payload.tools : [],
   };
+};
+
+const hasUsableHomeData = (payload: any) => {
+  if (!payload || typeof payload !== "object") {
+    return false;
+  }
+  const hasTools = Array.isArray(payload.tools);
+  const hasCatelogs = Array.isArray(payload.catelogs);
+  return hasTools && hasCatelogs;
 };
 
 const getInitialRenderCount = () => {
@@ -252,10 +272,16 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         setLoading(true);
       }
       const fetched = await fetchHomeData();
-      if (!fetched) {
+      let result = fetched ? normalizeHomeData(fetched) : null;
+      if (!result && !hasUsableHomeData(localCacheData)) {
+        // 命中 304 且本地缓存不可用时，清理 ETag 后强制回源一次，避免页面停留在空数据状态。
+        clearHomeEtagCache();
+        const retryFetched = await FetchList();
+        result = retryFetched ? normalizeHomeData(retryFetched) : null;
+      }
+      if (!result) {
         return;
       }
-      const result = normalizeHomeData(fetched);
       const localTagOrder = readTagOrder();
       const normalizedTags = mergeTagOrder(sortTags(result.catelogs ?? [ALL_TOOLS_TAG]), localTagOrder);
       setData(result);
@@ -853,7 +879,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
           </div>
         ) : null}
 
-        <div className={`content topbar-content ${data?.siteConfig?.compactMode ? "compact-mode" : ""}`}>
+        <div className={`content topbar-content ${data?.siteConfig?.compactMode ? "compact-mode" : ""} ${editMode ? "edit-mode" : ""}`}>
           <SearchBar
             searchString={val}
             setSearchText={(text) => {

@@ -4,6 +4,7 @@ import { FetchList } from "../../utils/api";
 
 jest.mock("../../utils/api", () => ({
   FetchList: jest.fn(),
+  clearHomeEtagCache: jest.fn(),
   fetchUpdateToolsSort: jest.fn(() => Promise.resolve({})),
   fetchUpdateToolsAllSort: jest.fn(() => Promise.resolve({})),
   fetchUpdateCatelogsSort: jest.fn(() => Promise.resolve({})),
@@ -43,6 +44,24 @@ describe("首页布局编辑", () => {
     render(<Content editMode />);
     expect(await screen.findByText("保存")).toBeInTheDocument();
     expect(screen.getByText("取消")).toBeInTheDocument();
+  });
+
+  it("命中 304 且缓存异常时会清缓存并回源恢复标签", async () => {
+    const cacheKey = "van_nav_home_cache_v2:auth";
+    window.localStorage.setItem(cacheKey, JSON.stringify({ bad: true }));
+    (FetchList as jest.Mock)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({
+        tools: [{ id: 1, name: "A", desc: "A", catelog: "开发", sort: 1, url: "https://a.com", logo: "" }],
+        catelogs: ["全部工具", "开发"],
+        catelogItems: [{ id: 101, name: "开发", sort: 1 }],
+        setting: {},
+        siteConfig: {},
+      });
+
+    render(<Content />);
+    expect(await screen.findByText("开发")).toBeInTheDocument();
+    expect(window.localStorage.getItem(cacheKey)).not.toEqual(JSON.stringify({ bad: true }));
   });
 });
 
