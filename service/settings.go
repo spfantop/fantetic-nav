@@ -40,7 +40,7 @@ func GetSetting() types.Setting {
 		return types.Setting{
 			Id:                   1,
 			Favicon:              "favicon.ico",
-			Title:                "Van Nav",
+			Title:                "Fantetic Nav",
 			GovRecord:            "",
 			FooterName:           "笔尖码动",
 			FooterLink:           "https://henniubi.com",

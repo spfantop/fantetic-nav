@@ -47,7 +47,7 @@ describe("首页布局编辑", () => {
   });
 
   it("命中 304 且缓存异常时会清缓存并回源恢复标签", async () => {
-    const cacheKey = "van_nav_home_cache_v2:auth";
+    const cacheKey = "fantetic_nav_home_cache_v2:auth";
     window.localStorage.setItem(cacheKey, JSON.stringify({ bad: true }));
     (FetchList as jest.Mock)
       .mockResolvedValueOnce(null)

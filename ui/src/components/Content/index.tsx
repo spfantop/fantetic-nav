@@ -33,8 +33,8 @@ const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
 const DEFAULT_TAG = "默认";
 const HOME_CACHE_TTL = 2000;
-const HOME_STORAGE_CACHE_KEY_BASE = "van_nav_home_cache_v2";
-const TAG_ORDER_STORAGE_KEY = "van_nav_tag_order_v1";
+const HOME_STORAGE_CACHE_KEY_BASE = "fantetic_nav_home_cache_v2";
+const TAG_ORDER_STORAGE_KEY = "fantetic_nav_tag_order_v1";
 const IDLE_PREWARM_COUNT = 12;
 const FIXED_TAIL_TOOL_URLS = ["admin", "toggleJumpTarget"];
 
@@ -869,7 +869,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       <Helmet>
         <meta charSet="utf-8" />
         <link rel="icon" href={data?.setting?.favicon ?? "/logo192.png"} />
-        <title>{data?.setting?.title ?? "Van Nav"}</title>
+        <title>{data?.setting?.title ?? "Fantetic Nav"}</title>
       </Helmet>
 
       <div className="topbar">

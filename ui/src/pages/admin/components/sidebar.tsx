@@ -100,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
         ))}
 
         <a
-          href="https://github.com/mereithhh/van-nav"
+          href="https://github.com/spfantop/fantetic-nav"
           target="_blank"
           rel="noopener noreferrer"
           className="
@@ -127,4 +127,5 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, currentKey, onChange })
     </div>
   );
 };
+
 

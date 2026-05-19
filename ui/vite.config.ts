@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "logo192.png", "logo512.png"],
       manifest: {
-        name: "Van Nav",
-        short_name: "Van Nav",
-        description: "Van Nav",
+        name: "Fantetic Nav",
+        short_name: "Fantetic Nav",
+        description: "Fantetic Nav",
         theme_color: "#000000",
         icons: [
           { src: "/logo192.png", sizes: "192x192", type: "image/png" },
@@ -66,3 +66,4 @@ export default defineConfig({
     },
   },
 });
+

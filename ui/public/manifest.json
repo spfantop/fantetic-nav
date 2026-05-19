@@ -1,5 +1,5 @@
 {
-  "short_name": "Van nav",
+  "short_name": "Fantetic Nav",
   "name": "Self-hosted application dashbard",
   "icons": [
     {
@@ -23,3 +23,4 @@
   "theme_color": "#000000",
   "background_color": "#ffffff"
 }
+

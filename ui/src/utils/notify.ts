@@ -1,6 +1,6 @@
 type NotifyType = "info" | "success" | "error";
 
-const CONTAINER_ID = "van-nav-toast-container";
+const CONTAINER_ID = "fantetic-nav-toast-container";
 
 const getColor = (type: NotifyType) => {
   if (type === "success") return "#2f855a";
@@ -60,3 +60,4 @@ const notify = (text: string, type: NotifyType = "info") => {
 export const notifyInfo = (text: string) => notify(text, "info");
 export const notifySuccess = (text: string) => notify(text, "success");
 export const notifyError = (text: string) => notify(text, "error");
+
