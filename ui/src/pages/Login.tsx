@@ -71,7 +71,6 @@ const Login: React.FC = () => {
         <div className="login-hero">
           <span className="login-badge">Fantetic Nav</span>
           <h1>管理入口</h1>
-          <p>暗色后台为本地与 Cloudflare 版本统一提供管理能力。</p>
         </div>
         <div className="login-box">
           <h2>账号登录</h2>
