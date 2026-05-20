@@ -1,5 +1,5 @@
 
-import { Button, Card, Form, Input, message, Popconfirm, Space, Spin, Table, Typography } from 'antd';
+import { App, Button, Card, Form, Input, Popconfirm, Space, Spin, Table, Typography } from 'antd';
 import DraggableModal from '../../../components/DraggableModal';
 import { DeleteOutlined } from '@ant-design/icons';
 import { useCallback, useState } from 'react';
@@ -11,6 +11,7 @@ export interface ApiTokenProps {
 export const ApiToken: React.FC<ApiTokenProps> = (props) => {
   const [addForm] = Form.useForm();
   const [showAddModel, setShowAddModel] = useState(false);
+  const { message } = App.useApp();
   const { store, loading, reload } = useData();
   const handleDelete = useCallback(
     async (id: number) => {
@@ -116,7 +117,7 @@ export const ApiToken: React.FC<ApiTokenProps> = (props) => {
         </Table>
       </Spin>
       <DraggableModal
-        visible={showAddModel}
+        open={showAddModel}
         title={"新建 Token"}
         onCancel={() => {
           setShowAddModel(false);

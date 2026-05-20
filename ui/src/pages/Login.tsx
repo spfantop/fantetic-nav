@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { message } from "antd";
+import { App } from "antd";
 import { fetchLoginCaptcha, login } from "../utils/api";
 import "./Login.css";
 
@@ -13,6 +13,7 @@ const Login: React.FC = () => {
   const [captchaAnswer, setCaptchaAnswer] = useState("");
   const [loadingCaptcha, setLoadingCaptcha] = useState(false);
   const navigate = useNavigate();
+  const { message } = App.useApp();
 
   const loadCaptcha = async () => {
     setLoadingCaptcha(true);
@@ -37,6 +38,7 @@ const Login: React.FC = () => {
       message.warning("请输入验证码");
       return;
     }
+
     try {
       const response = await login(username, password, needCaptcha ? { captchaId, captchaAnswer } : undefined);
       if (response.success) {
@@ -47,15 +49,18 @@ const Login: React.FC = () => {
         const nextNeedCaptcha = Boolean(response?.data?.needCaptcha);
         const locked = Boolean(response?.data?.locked);
         const retryAfter = Number(response?.data?.retryAfter || 0);
+
         if (nextNeedCaptcha) {
           setNeedCaptcha(true);
           setCaptchaAnswer("");
           await loadCaptcha();
         }
+
         if (locked && retryAfter > 0) {
           message.error(`已临时锁定，请在 ${retryAfter} 秒后重试`);
           return;
         }
+
         message.error(response.errorMessage || response.message || "登录失败");
       }
     } catch (error) {

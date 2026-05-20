@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
+  App,
   Table,
   Button,
 
   Form,
   Input,
   Space,
-  message,
   Image,
   Switch,
   Spin,
@@ -72,6 +72,7 @@ const DraggableRow = ({ children, ...props }: any) => {
 };
 
 const SearchEngineManager: React.FC = () => {
+  const { message } = App.useApp();
   const [engines, setEngines] = useState<SearchEngine[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);

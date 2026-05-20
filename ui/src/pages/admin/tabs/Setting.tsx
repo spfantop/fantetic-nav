@@ -1,4 +1,4 @@
-import { Button, Card, Form, Input, message, Select, Spin, Switch } from 'antd';
+import { App, Button, Card, Form, Input, Select, Spin, Switch } from 'antd';
 import { useCallback, useEffect } from 'react';
 import { fetchUpdateSetting, fetchUpdateSiteConfig, fetchUpdateUser } from '../../../utils/api';
 import { useData } from '../hooks/useData';
@@ -7,6 +7,7 @@ import './Setting.css';
 export interface SettingProps {}
 
 export const Setting: React.FC<SettingProps> = () => {
+  const { message } = App.useApp();
   const { store, loading, reload } = useData();
   const [userForm] = Form.useForm();
   const [settingForm] = Form.useForm();
@@ -126,7 +127,7 @@ export const Setting: React.FC<SettingProps> = () => {
               tooltip="选择点击卡片后的默认跳转方式"
             >
               <Select
-                popupClassName="admin-setting-select-popup"
+                classNames={{ popup: { root: "admin-setting-select-popup" } }}
                 options={[
                   { label: '原地跳转', value: false },
                   { label: '新标签页', value: true },

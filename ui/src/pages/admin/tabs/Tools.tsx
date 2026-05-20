@@ -1,4 +1,5 @@
 import {
+  App,
   Button,
   Card,
 
@@ -11,7 +12,6 @@ import {
   InputNumber,
   Select,
   Upload,
-  message,
   Tooltip,
   Switch
 } from "antd";
@@ -108,6 +108,7 @@ const Row = ({ children, ...props }: RowProps) => {
 
 export interface ToolsProps { }
 export const Tools: React.FC<ToolsProps> = (props) => {
+  const { message } = App.useApp();
   const { store, loading, reload } = useData();
   const [showEdit, setShowEdit] = useState(false);
   const [requestLoading, setRequestLoading] = useState(false);
@@ -531,6 +532,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
       </Spin>
       {<DraggableModal
         open={showAddModel}
+        forceRender
         title={"新建工具"}
         onCancel={() => {
           setShowAddModel(false);
@@ -539,7 +541,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
         afterClose={() => {
           addForm.resetFields(); // Modal完全关闭后再次重置表单
         }}
-        destroyOnClose={true}
+        destroyOnHidden={true}
         onOk={() => {
           const values = addForm?.getFieldsValue();
           handleCreate(values);
@@ -631,8 +633,9 @@ export const Tools: React.FC<ToolsProps> = (props) => {
       </DraggableModal>}
       {<DraggableModal
         open={showEdit}
+        forceRender
         title={"修改工具"}
-        destroyOnClose
+        destroyOnHidden
         onCancel={() => {
           setShowEdit(false);
         }}
@@ -682,7 +685,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
                 </span>
               }
               labelCol={{ span: 4 }}>
-              <InputNumber placeholder="请输入排序" defaultValue={1} />
+              <InputNumber placeholder="请输入排序" />
             </Form.Item>
 
             <Form.Item

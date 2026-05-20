@@ -1,4 +1,5 @@
 import {
+  App,
   Button,
   Card,
   Form,
@@ -11,7 +12,6 @@ import {
   Switch,
   Table,
   Tooltip,
-  message,
 } from "antd";
 import DraggableModal from "../../../components/DraggableModal";
 import { DeleteOutlined, EditOutlined, HolderOutlined, QuestionCircleOutlined } from "@ant-design/icons";
@@ -87,6 +87,7 @@ const Row = ({ children, ...props }: RowProps) => {
 };
 
 export const Catelog: React.FC<CatelogProps> = () => {
+  const { message } = App.useApp();
   const { store, loading, reload } = useData();
   const [requestLoading, setRequestLoading] = useState(false);
   const [addForm] = Form.useForm();
@@ -298,7 +299,7 @@ export const Catelog: React.FC<CatelogProps> = () => {
             labelCol={{ span: 4 }}
             rules={[{ required: true, message: "请输入分类排序" }]}
           >
-            <InputNumber placeholder="请输入分类排序" type="number" defaultValue={1} />
+            <InputNumber placeholder="请输入分类排序" type="number" />
           </Form.Item>
           <Form.Item
             name="hide"
@@ -356,7 +357,7 @@ export const Catelog: React.FC<CatelogProps> = () => {
               labelCol={{ span: 4 }}
               rules={[{ required: true, message: "请输入分类排序" }]}
             >
-              <InputNumber placeholder="请输入分类排序" defaultValue={1} />
+              <InputNumber placeholder="请输入分类排序" />
             </Form.Item>
             <Form.Item
               name="hide"

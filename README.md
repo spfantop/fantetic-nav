@@ -1,8 +1,8 @@
-# Van Nav
+# Fantetic Nav
 
-一个轻量的导航站，现在有搜索引擎集成了，很适合作为主页使用。有配套的[浏览器插件](https://github.com/Mereithhh/van-nav-extension)和 API。 [在线体验](https://demo-tools.mereith.com) (总有人改后台数据，后台密码就不放出来了)
+一个轻量的导航站，现在有搜索引擎集成了，很适合作为主页使用。有配套的[浏览器插件](https://github.com/spfantop/fantetic-nav-extension)和 API。 [在线体验](https://demo.fantetic-nav.dev) (总有人改后台数据，后台密码就不放出来了)
 
-> 新增了 [API 文档](https://van-nav-api.mereith.dev)，用 AI 生成的，如果不准确请提 Issue 哦。
+> 新增了 [API 文档](https://api.fantetic-nav.dev)，用 AI 生成的，如果不准确请提 Issue 哦。
 
 ## 预览
 
@@ -107,7 +107,7 @@ pnpm run start-win
 ### Docker
 
 ```
-docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/app/data mereith/van-nav:latest
+docker run -d --name tools --restart always -p 6412:6412 -v /path/to/your/data:/app/data spfantop/fantetic-nav:latest
 ```
 
 打开浏览器 [http://localhost:6412](http://localhost:6412) 即可访问。
@@ -165,12 +165,12 @@ server {
 
 1. 复制二进制文件到 `/usr/local/bin` 目录下，并加上执行权限
 
-2. 新建 `VanNav.serivce` 文件于 `/usr/lib/systemd/system` 目录下:
+2. 新建 `FanteticNav.service` 文件于 `/usr/lib/systemd/system` 目录下:
 
 ```
 [Unit]
-Description=VanNav
-Documentation=https://github.com/mereithhh/van-nav
+Description=FanteticNav
+Documentation=https://github.com/spfantop/fantetic-nav
 After=network.target
 Wants=network.target
 
@@ -191,12 +191,12 @@ WantedBy=multi-user.target
 3. 执行:
 
 ```
-sudo systemctl daemon-reload && sudo systemctl enable --now VanNav.service
+sudo systemctl daemon-reload && sudo systemctl enable --now FanteticNav.service
 ```
 
 ## 浏览器插件
 
-具体请看： [浏览器插件仓库](https://github.com/Mereithhh/van-nav-extension)
+具体请看： [浏览器插件仓库](https://github.com/spfantop/fantetic-nav-extension)
 
 具有一键增加工具，快速打开管理后台和主站等功能。具体自行探索哦。
 
@@ -206,11 +206,11 @@ sudo systemctl daemon-reload && sudo systemctl enable --now VanNav.service
 
 尝试用 ai 生成 api 文档，具体请看
 
-> [API 文档](https://van-nav-api.mereith.dev)
+> [API 文档](https://api.fantetic-nav.dev)
 
 ## FAQ
 
-- 忘记密码了怎么办： [看这里](https://github.com/Mereithhh/van-nav/issues/36)
+- 忘记密码了怎么办： [看这里](https://github.com/spfantop/fantetic-nav/issues/36)
 
 ## 参与开发
 

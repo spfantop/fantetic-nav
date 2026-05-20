@@ -2,7 +2,11 @@ import React, { useMemo, useRef, useState } from "react";
 import { Modal } from "antd";
 import type { ModalProps } from "antd";
 
-export const DraggableModal: React.FC<ModalProps> = ({ title, ...rest }) => {
+type DraggableModalProps = ModalProps & {
+  visible?: boolean;
+};
+
+export const DraggableModal: React.FC<DraggableModalProps> = ({ title, open, visible, ...rest }) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef({
     dragging: false,
@@ -49,17 +53,18 @@ export const DraggableModal: React.FC<ModalProps> = ({ title, ...rest }) => {
   return (
     <Modal
       {...rest}
+      open={open ?? visible}
       okText={rest.okText ?? "确定"}
       cancelText={rest.cancelText ?? "取消"}
       title={titleNode}
       modalRender={(modal) => (
         <div style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}>{modal}</div>
       )}
-      afterOpenChange={(open) => {
-        if (!open) {
+      afterOpenChange={(isOpen) => {
+        if (!isOpen) {
           setOffset({ x: 0, y: 0 });
         }
-        rest.afterOpenChange?.(open);
+        rest.afterOpenChange?.(isOpen);
       }}
     />
   );
