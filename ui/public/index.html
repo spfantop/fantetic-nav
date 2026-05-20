@@ -15,17 +15,9 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!-- 鏂囧嚡瀛椾綋 -->
+    <!-- 閺傚洤鍤＄€涙ぞ缍?-->
     <link rel="stylesheet" href="%PUBLIC_URL%/fonts/lxgw-wenkai/lxgwwenkai-regular.css" />
-    <script>
-      const mode = window.localStorage.getItem("theme");
-      if (mode && mode == 'dark') {
-        const el = document.querySelector("body");
-        if (el) {
-          el.classList.toggle("dark-mode",true);
-        }
-      }
-    </script>
+    <script src="%PUBLIC_URL%/theme-init.js"></script>
     <!--
       Notice the use of %PUBLIC_URL% in the tags above.
       It will be replaced with the URL of the `public` folder during the build.

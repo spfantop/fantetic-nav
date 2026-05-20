@@ -9,18 +9,10 @@
     <link rel="icon" href="/logo192.png" />
     <link rel="apple-touch-icon" href="/logo192.png" />
     <link rel="stylesheet" href="/fonts/lxgw-wenkai/lxgwwenkai-regular.css" />
-    <script>
-      const mode = window.localStorage.getItem("theme");
-      if (mode === "dark") {
-        const el = document.querySelector("body");
-        if (el) {
-          el.classList.toggle("dark-mode", true);
-        }
-      }
-    </script>
+    <script src="/theme-init.js"></script>
   </head>
   <body>
-    <noscript>闇€瑕佸惎鐢?JavaScript 鎵嶈兘杩愯姝ゅ簲鐢ㄣ€?/noscript>
+    <noscript>闂団偓鐟曚礁鎯庨悽?JavaScript 閹靛秷鍏樻潻鎰攽濮濄倕绨查悽銊ｂ偓?/noscript>
     <div id="root"></div>
     <script type="module" src="/src/index.tsx"></script>
   </body>
