@@ -378,9 +378,20 @@ func GetLogoImgHandler(c *gin.Context) {
 	img := service.GetImgFromDB(rawURL)
 	if img.Value == "" {
 		missingLogoCache.Add(rawURL)
+		c.Header("Cache-Control", "no-store")
 		c.JSON(http.StatusNotFound, gin.H{
 			"success":      false,
 			"errorMessage": "未找到图片",
+		})
+		return
+	}
+	if !service.IsBase64ImageData(img.Value) {
+		service.DeleteImgByURL(rawURL)
+		missingLogoCache.Add(rawURL)
+		c.Header("Cache-Control", "no-store")
+		c.JSON(http.StatusNotFound, gin.H{
+			"success":      false,
+			"errorMessage": "?????????????",
 		})
 		return
 	}
@@ -448,6 +459,10 @@ func GetLogoImgBatchHandler(c *gin.Context) {
 	result := make(map[string]any, len(imgs))
 	etagInputs := make([]string, 0, len(imgs))
 	for originalURL, img := range imgs {
+		if !service.IsBase64ImageData(img.Value) {
+			service.DeleteImgByURL(originalURL)
+			continue
+		}
 		result[originalURL] = gin.H{
 			"mime":   detectImageContentType(originalURL),
 			"base64": img.Value,

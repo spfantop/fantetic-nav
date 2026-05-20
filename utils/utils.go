@@ -63,6 +63,10 @@ func GetImgBase64FromUrl(url string) string {
 	if res.StatusCode < 200 || res.StatusCode >= 300 {
 		return ""
 	}
+	contentType := strings.ToLower(strings.TrimSpace(strings.Split(res.Header.Get("Content-Type"), ";")[0]))
+	if contentType != "" && !strings.HasPrefix(contentType, "image/") && contentType != "application/octet-stream" {
+		return ""
+	}
 
 	// 限制读取大小，避免超大响应导致内存压力
 	limitedBody := io.LimitReader(res.Body, 2*1024*1024)
@@ -73,6 +77,12 @@ func GetImgBase64FromUrl(url string) string {
 	}
 	if len(data) == 0 {
 		return ""
+	}
+	detectedType := strings.ToLower(http.DetectContentType(data))
+	if !strings.HasPrefix(detectedType, "image/") {
+		if !strings.Contains(string(data), "<svg") {
+			return ""
+		}
 	}
 
 	imageBase64 := base64.StdEncoding.EncodeToString(data)

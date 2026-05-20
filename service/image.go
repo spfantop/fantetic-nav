@@ -1,7 +1,9 @@
 package service
 
 import (
+	"encoding/base64"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strings"
 
@@ -75,6 +77,27 @@ func GetImgFromDB(url1 string) types.Img {
 
 	defer rows.Close()
 	return result
+}
+
+func DeleteImgByURL(url1 string) {
+	urlEncoded := url.QueryEscape(url1)
+	_, err := database.DB.Exec(`DELETE FROM nav_img WHERE url = ?;`, urlEncoded)
+	utils.CheckErr(err)
+}
+
+func IsBase64ImageData(value string) bool {
+	if strings.TrimSpace(value) == "" {
+		return false
+	}
+	imgBuffer, err := base64.StdEncoding.DecodeString(value)
+	if err != nil || len(imgBuffer) == 0 {
+		return false
+	}
+	detectedType := strings.ToLower(http.DetectContentType(imgBuffer))
+	if strings.HasPrefix(detectedType, "image/") {
+		return true
+	}
+	return strings.Contains(string(imgBuffer), "<svg")
 }
 
 func UpdateImg(url1 string) {
