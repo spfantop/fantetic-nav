@@ -224,6 +224,8 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const cardsGridRef = useRef<HTMLDivElement | null>(null);
   const scrollRafRef = useRef<number | null>(null);
   const scrollClassTimerRef = useRef<number | null>(null);
+  const latestScrollTopRef = useRef(0);
+  const rowHeightMeasuredRef = useRef(false);
   const originalSnapshotRef = useRef<{ tools: any[]; tags: string[] } | null>(null);
   const cardDragRef = useRef<CardDragSession | null>(null);
   const tagDragRef = useRef<TagDragSession | null>(null);
@@ -456,6 +458,9 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       const style = window.getComputedStyle(grid);
       const columns = Math.max(1, style.gridTemplateColumns.split(" ").filter(Boolean).length);
       setColumnCount((prev) => (prev === columns ? prev : columns));
+      if (rowHeightMeasuredRef.current) {
+        return;
+      }
       const rowGap = Number.parseFloat(style.rowGap || style.gap || "0") || 0;
       const firstCard = grid.querySelector(".card-box") as HTMLElement | null;
       if (!firstCard) {
@@ -463,20 +468,18 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       }
       const nextRowHeight = Math.max(1, Math.round(firstCard.getBoundingClientRect().height + rowGap));
       setRowHeight((prev) => (Math.abs(prev - nextRowHeight) < 2 ? prev : nextRowHeight));
+      rowHeightMeasuredRef.current = true;
     };
+    rowHeightMeasuredRef.current = false;
     const raf = window.requestAnimationFrame(updateGridMetrics);
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", updateGridMetrics);
-      return () => {
-        window.cancelAnimationFrame(raf);
-        window.removeEventListener("resize", updateGridMetrics);
-      };
-    }
-    const observer = new ResizeObserver(updateGridMetrics);
-    observer.observe(grid);
+    const handleResize = () => {
+      rowHeightMeasuredRef.current = false;
+      window.requestAnimationFrame(updateGridMetrics);
+    };
+    window.addEventListener("resize", handleResize);
     return () => {
       window.cancelAnimationFrame(raf);
-      observer.disconnect();
+      window.removeEventListener("resize", handleResize);
     };
   }, [editMode, loading, filteredData.length, data?.siteConfig?.compactMode]);
 
@@ -537,11 +540,11 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       scrollClassTimerRef.current = null;
     }, 120);
 
-    const nextScrollTop = currentTarget.scrollTop;
+    latestScrollTopRef.current = currentTarget.scrollTop;
     if (scrollRafRef.current === null) {
       scrollRafRef.current = window.requestAnimationFrame(() => {
         scrollRafRef.current = null;
-        setScrollTop(nextScrollTop);
+        setScrollTop(latestScrollTopRef.current);
       });
     }
 
