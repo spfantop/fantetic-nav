@@ -40,6 +40,17 @@ let homeDataCache: any = null;
 let homeDataCacheAt = 0;
 let homeDataInFlight: Promise<any> | null = null;
 const getHomeStorageCacheKey = () => `${HOME_STORAGE_CACHE_KEY_BASE}:${window.localStorage.getItem("_token") ? "auth" : "guest"}`;
+const clearHomeViewCache = () => {
+  clearHomeEtagCache();
+  homeDataCache = null;
+  homeDataCacheAt = 0;
+  homeDataInFlight = null;
+  try {
+    window.localStorage.removeItem(getHomeStorageCacheKey());
+  } catch {
+    // ignore
+  }
+};
 
 const mutiSearch = (s: string, t: string) => {
   const source = String(s || "").toLowerCase();
@@ -47,24 +58,30 @@ const mutiSearch = (s: string, t: string) => {
   return source.includes(target) || Boolean(pinyin.match(source, target));
 };
 
-const fetchHomeData = async () => {
+const fetchHomeData = async (force = false) => {
   const now = Date.now();
-  if (homeDataCache && now - homeDataCacheAt < HOME_CACHE_TTL) {
+  if (!force && homeDataCache && now - homeDataCacheAt < HOME_CACHE_TTL) {
     return homeDataCache;
   }
-  if (homeDataInFlight) {
+  if (!force && homeDataInFlight) {
     return homeDataInFlight;
   }
-  homeDataInFlight = FetchList()
+  const request = FetchList()
     .then((result) => {
       homeDataCache = result;
       homeDataCacheAt = Date.now();
       return result;
-    })
-    .finally(() => {
-      homeDataInFlight = null;
     });
-  return homeDataInFlight;
+  if (!force) {
+    homeDataInFlight = request;
+  }
+  try {
+    return await request;
+  } finally {
+    if (!force && homeDataInFlight === request) {
+      homeDataInFlight = null;
+    }
+  }
 };
 
 const readHomeStorageCache = () => {
@@ -244,9 +261,9 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     setCurrTag(defaultTag);
   }, []);
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (options?: { forceRemote?: boolean; skipLocalCache?: boolean }) => {
     const perfStart = typeof performance !== "undefined" ? performance.now() : 0;
-    const localCacheData = normalizeHomeData(readHomeStorageCache());
+    const localCacheData = options?.skipLocalCache ? null : normalizeHomeData(readHomeStorageCache());
     if (localCacheData) {
       const localTagOrder = readTagOrder();
       const normalizedTags = mergeTagOrder(sortTags(localCacheData.catelogs ?? [ALL_TOOLS_TAG]), localTagOrder);
@@ -261,7 +278,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       if (!localCacheData) {
         setLoading(true);
       }
-      const fetched = await fetchHomeData();
+      const fetched = await fetchHomeData(Boolean(options?.forceRemote));
       let result = fetched ? normalizeHomeData(fetched) : null;
       if (!result && !hasUsableHomeData(localCacheData)) {
         // 闂傚倷绀侀幉锛勭矙閹烘鍨傛繝闈涱儐閸?304 婵犵數鍋為崹鍫曞箰鐠囧樊娼栭柣鐔峰簻閼板灝霉閸忓吋缍戦柟鐟扮埣閺岀喎鈻撻崹顔界亾婵犮垼娉涚€氫即骞冨Δ鈧埥澶娾枍椤撯€充汗缂侇噮鍘藉鍕箛椤掑倻鍘俊鐐€栭悧妤冨垝瀹ュ姹查煫鍥ㄧ⊕閻撴盯鏌涢幇闈涘季闁哥喎娲ㄧ槐鎺撴綇閵娧呯暤闂侀潧妫欑敮鈥崇暦閵娾晩鏁嶆繛鎴炃氶崑?ETag 闂傚倷绀侀幉锟犳嚌閻愵剦娈界紒瀣儥閸熷懘姊洪鈧粔瀵哥矆閸℃稒鍋ｉ柧蹇曟嚀閸斿绱掗埀顒勫焵椤掆偓閳规垿鎮╁▎蹇擃仼濠殿喖鍟扮槐鎺楀籍閳ь剙顭囧▎鎾崇厺閹兼番鍔岄悡锟犳煕濞戝崬鐏ｆい锔诲櫍濮婄粯绗熼崶褍顫╅梺璇茬箲缁诲牆鐣烽姀銈呂ч柛鈩冨姃缁ㄥ姊哄Ч鍥х仼闁规祴鈧剚娴栭柕濞炬櫆閻撴洟鎮楅敐搴′簽闁活厼鐭傞弻锟犲幢韫囨挷澹曢梻鍌欑窔濞艰崵鎷归悢鐓庣閹兼番鍔岄悡姗€鏌″搴″箹闁哄绶氶弻锝呂旈埀顒勬偋閸℃瑧鐭堥柨鏇炲€归悡鐔镐繆椤栨氨浠㈤柣鎾村姍閺屽秷顧侀柛蹇旂洴濮婅棄顓兼径濠勫姦?
@@ -682,7 +699,8 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     resetSearch();
     if (url === "toggleJumpTarget") {
       toggleJumpTarget();
-      loadData();
+      clearHomeViewCache();
+      void loadData({ forceRemote: true, skipLocalCache: true });
     }
   }, [loadData, resetSearch]);
 
@@ -718,6 +736,16 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const virtualCards = useMemo(
     () => renderedCards.slice(virtualRange.startIndex, virtualRange.endIndex),
     [renderedCards, virtualRange.startIndex, virtualRange.endIndex]
+  );
+  const virtualPaddingStyle = useMemo(
+    () =>
+      editMode
+        ? undefined
+        : ({
+            paddingTop: virtualRange.topSpacer,
+            paddingBottom: virtualRange.bottomSpacer,
+          } as React.CSSProperties),
+    [editMode, virtualRange.topSpacer, virtualRange.bottomSpacer]
   );
 
   const renderCardsV2 = useCallback(() => {
@@ -960,15 +988,15 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       </div>
 
       <div className="content-wraper" onScroll={handleContentScroll} ref={contentWrapperRef}>
-        <div className={`content cards ${data?.siteConfig?.compactMode ? "compact-grid" : ""}`} ref={cardsGridRef}>
+        <div
+          className={`content cards ${data?.siteConfig?.compactMode ? "compact-grid" : ""}`}
+          ref={cardsGridRef}
+          style={virtualPaddingStyle}
+        >
           {loading ? (
             <Loading />
           ) : !editMode ? (
-            <>
-              {virtualRange.topSpacer > 0 ? <div style={{ height: virtualRange.topSpacer, gridColumn: "1 / -1" }} /> : null}
-              {renderCardsV2()}
-              {virtualRange.bottomSpacer > 0 ? <div style={{ height: virtualRange.bottomSpacer, gridColumn: "1 / -1" }} /> : null}
-            </>
+            renderCardsV2()
           ) : (
             editableCards.map((item, index) => (
                 <EditableCard

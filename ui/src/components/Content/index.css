@@ -564,6 +564,7 @@
   overflow-y: scroll;
   -ms-overflow-style: none; /* IE 10+ */
   scrollbar-width: none; /* firefox */
+  overflow-anchor: none;
   flex: 1;
   min-height: 0;
   height: auto;
@@ -590,10 +591,6 @@
 }
 
 /* 让浏览器跳过离屏卡片的绘制，提升高刷新率滚动流畅度 */
-.cards .card-box {
-  content-visibility: auto;
-  contain-intrinsic-size: 88px 260px;
-}
 .record-wraper {
   text-align: center;
   position: fixed;
