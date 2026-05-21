@@ -119,6 +119,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
   const [updateForm] = Form.useForm();
   const [selectedRows, setSelectRows] = useState<any>([]);
   const [dataSource, setDataSource] = useState<DataType[]>([]);
+  const [editingRecord, setEditingRecord] = useState<any>(null);
 
   const handleDelete = useCallback(
     async (id: number) => {
@@ -289,6 +290,13 @@ export const Tools: React.FC<ToolsProps> = (props) => {
       setDataSource(filteredData);
     }
   }, [store?.tools, searchString, catelogName]);
+
+  useEffect(() => {
+    if (!showEdit || !editingRecord) {
+      return;
+    }
+    updateForm.setFieldsValue(editingRecord);
+  }, [showEdit, editingRecord, updateForm]);
 
   return (
     <Card
@@ -510,7 +518,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
                         type="text"
                         icon={<EditOutlined />}
                         onClick={() => {
-                          updateForm.setFieldsValue(record);
+                          setEditingRecord(record);
                           setShowEdit(true);
                         }}
                       />
@@ -638,6 +646,7 @@ export const Tools: React.FC<ToolsProps> = (props) => {
         destroyOnHidden
         onCancel={() => {
           setShowEdit(false);
+          setEditingRecord(null);
         }}
         onOk={() => {
           const values = updateForm?.getFieldsValue();

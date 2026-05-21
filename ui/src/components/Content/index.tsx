@@ -36,6 +36,7 @@ const HOME_CACHE_TTL = 2000;
 const HOME_STORAGE_CACHE_KEY_BASE = "fantetic_nav_home_cache_v2";
 const TAG_ORDER_STORAGE_KEY = "fantetic_nav_tag_order_v1";
 const IDLE_PREWARM_COUNT = 12;
+const MAX_PREWARMED_LOGOS = 200;
 const FIXED_TAIL_TOOL_URLS = ["admin", "toggleJumpTarget"];
 
 let homeDataCache: any = null;
@@ -509,6 +510,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       return;
     }
     const preload = () => {
+      const createdLinks: HTMLLinkElement[] = [];
       nextBatch.forEach((item: any) => {
         if (!item?.logo || item.url === "admin" || item.url === "toggleJumpTarget") {
           return;
@@ -516,22 +518,46 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         if (prewarmedLogoSet.has(item.logo)) {
           return;
         }
+        if (prewarmedLogoSet.size >= MAX_PREWARMED_LOGOS) {
+          return;
+        }
         prewarmedLogoSet.add(item.logo);
         const link = document.createElement("link");
         link.rel = "prefetch";
         link.as = "image";
         link.href = `/api/img?url=${encodeURIComponent(item.logo)}`;
+        const cleanup = () => {
+          link.removeEventListener("load", cleanup);
+          link.removeEventListener("error", cleanup);
+          link.remove();
+        };
+        link.addEventListener("load", cleanup, { once: true });
+        link.addEventListener("error", cleanup, { once: true });
         document.head.appendChild(link);
+        createdLinks.push(link);
       });
+      return createdLinks;
     };
     const idleCallback = (window as any).requestIdleCallback;
     const cancelIdleCallback = (window as any).cancelIdleCallback;
     if (typeof idleCallback === "function") {
-      const id = idleCallback(preload, { timeout: 1000 });
-      return () => cancelIdleCallback?.(id);
+      let links: HTMLLinkElement[] = [];
+      const id = idleCallback(() => {
+        links = preload() ?? [];
+      }, { timeout: 1000 });
+      return () => {
+        cancelIdleCallback?.(id);
+        links.forEach((link) => link.remove());
+      };
     }
-    const timer = window.setTimeout(preload, 160);
-    return () => window.clearTimeout(timer);
+    let links: HTMLLinkElement[] = [];
+    const timer = window.setTimeout(() => {
+      links = preload() ?? [];
+    }, 160);
+    return () => {
+      window.clearTimeout(timer);
+      links.forEach((link) => link.remove());
+    };
   }, [filteredData, renderCount, searchString, editMode]);
 
   const handleContentScroll = useCallback((ev: any) => {

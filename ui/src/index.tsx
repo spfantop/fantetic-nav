@@ -1,8 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
+
+declare global {
+  interface Window {
+    __fanteticNavRoot?: Root;
+  }
+}
 
 const renderBootError = (message: string) => {
   const fallback = document.createElement('pre');
@@ -39,8 +46,16 @@ const ensureRootContainer = () => {
 const mountApp = () => {
   try {
     const container = ensureRootContainer();
-    const root = createRoot(container);
-    root.render(<App />);
+    if (!window.__fanteticNavRoot) {
+      window.__fanteticNavRoot = createRoot(container);
+    }
+
+    if (container.dataset.appMounted === '1') {
+      return;
+    }
+
+    container.dataset.appMounted = '1';
+    window.__fanteticNavRoot.render(<App />);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
     console.error('App bootstrap failed:', error);
