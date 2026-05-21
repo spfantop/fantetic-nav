@@ -25,9 +25,8 @@ import {
   swapByIds,
 } from "./reorder";
 
-const FRAME_INITIAL_COUNT_DESKTOP = 24;
-const FRAME_INITIAL_COUNT_MOBILE = 16;
-const FRAME_BATCH_COUNT = 32;
+const VIRTUAL_OVERSCAN_ROWS = 3;
+const DEFAULT_ROW_HEIGHT = 112;
 const BACK_TO_TOP_THRESHOLD = 300;
 const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
@@ -35,14 +34,11 @@ const DEFAULT_TAG = "默认";
 const HOME_CACHE_TTL = 2000;
 const HOME_STORAGE_CACHE_KEY_BASE = "fantetic_nav_home_cache_v2";
 const TAG_ORDER_STORAGE_KEY = "fantetic_nav_tag_order_v1";
-const IDLE_PREWARM_COUNT = 12;
-const MAX_PREWARMED_LOGOS = 200;
 const FIXED_TAIL_TOOL_URLS = ["admin", "toggleJumpTarget"];
 
 let homeDataCache: any = null;
 let homeDataCacheAt = 0;
 let homeDataInFlight: Promise<any> | null = null;
-const prewarmedLogoSet = new Set<string>();
 const getHomeStorageCacheKey = () => `${HOME_STORAGE_CACHE_KEY_BASE}:${window.localStorage.getItem("_token") ? "auth" : "guest"}`;
 
 const mutiSearch = (s: string, t: string) => {
@@ -80,7 +76,7 @@ const readHomeStorageCache = () => {
     }
     const parsed = JSON.parse(raw);
     if (!hasUsableHomeData(parsed)) {
-      // 缓存结构异常时立即删除，避免后续反复命中坏缓存。
+      // 缂傚倸鍊搁崐鎼佸磹瑜版帒绠伴柟闂寸劍閸嬨倝鏌曟繛褍鎳愰敍婊堟⒑鐟欏嫬鍔ゆい鏇ㄥ弮閸┾偓妞ゆ帒顦悘鐘炽亜閺囶亞绉€规洘甯掗～婵嬪础閻愰潧骞€闂傚倷绀侀幖顐﹀疮椤愶絾娅犻幖娣妽閸嬬喐绻涢幋娆忕仼缁绢厸鍋撻梻浣告啞閸旀牞銇愰崘顔藉€堕柍鍝勬噺閳锋帡鏌涢弴妤佹珔闁逞屽劯閸涱噮娼熷┑鐘绘涧椤戝棝鎮炴總鍛婄厱妞ゎ厽鍨甸弸娑㈡偨椤栨稑鈻曢柡灞剧☉椤繈顢楁担鐟伴棷闂備焦鐪归崹褰掆€﹀畡鎵殾闁挎繂鎷嬮崥瀣煕濠娾偓閻掞缚绨洪梻鍌欑閹诧紕绮欓幒妤€鍨傛繝闈涱儐閸ゅ牓鏌熸潏鍓х暠闂佽￥鍊濋悡顐﹀炊閵婏妇顦繝銏ｆ硾鐎氫即骞冨Δ鈧埥澶娾枍鏉堛劎鐭掗柛鈹惧亾?
       window.localStorage.removeItem(cacheKey);
       return null;
     }
@@ -95,7 +91,7 @@ const writeHomeStorageCache = (payload: any) => {
   try {
     window.localStorage.setItem(getHomeStorageCacheKey(), JSON.stringify(payload));
   } catch {
-    // 忽略缓存写入失败，避免影响主流程。
+    // 闂傚倸顭崑鍕洪妸鈺佺柧妞ゆ劧绠戝Ч鏌ユ煙闁箑鏋ょ痪鍙ョ矙閺岀喖骞嗚閿涘秹鏌熼悾灞解枅闁哄本鐩獮鍥敇閻樺啿娅戦梻浣告啞閻熴儱螞濞嗗浚鍤楅柛鏇ㄥ墯缂嶅洦銇勯幇鈺佸壘闁哄洢鍨洪悡銉︾箾閹寸儐鐒介柣鎺旑焾闇夐悘蹇旂墬濞呭﹦鈧娲橀〃鍛搭敇婵傜宸濇い鎾楀嫷鍞甸梻鍌欑閹诧紕鎹㈤崒婊呯煋鐎规洖娲犻崑鎾绘濞戞粌顏梻鍥ь槸闇夐柨婵嗙墑閳ь兘鍋撻梺鍝勮閸婃繈寮?
   }
 };
 
@@ -125,13 +121,6 @@ const hasUsableHomeData = (payload: any) => {
   const hasTools = Array.isArray(payload.tools);
   const hasCatelogs = Array.isArray(payload.catelogs);
   return hasTools && hasCatelogs;
-};
-
-const getInitialRenderCount = () => {
-  if (typeof window === "undefined") {
-    return FRAME_INITIAL_COUNT_DESKTOP;
-  }
-  return window.innerWidth < 768 ? FRAME_INITIAL_COUNT_MOBILE : FRAME_INITIAL_COUNT_DESKTOP;
 };
 
 const sortTools = (tools: any[]) =>
@@ -177,7 +166,7 @@ const writeTagOrder = (order: string[]) => {
   try {
     window.localStorage.setItem(TAG_ORDER_STORAGE_KEY, JSON.stringify(order));
   } catch {
-    // 忽略本地持久化失败。
+    // 闂傚倸顭崑鍕洪妸鈺佺柧妞ゆ劧绠戝Ч鏌ユ煙閻楀牊绶查悗姘槹閵囧嫰骞掗崱妞惧婵犵數濮崑鎾绘煙缂併垹鏋涚紒鐘虫緲闇夐柨婵嗩樈濡垿鏌ｉ敐鍕煓闁哄本鐩浠嬪Ω瑜嶉埅褰掓⒑闂堟稒澶勯柛銊ョ秺楠炲繗銇愰幒鎳炽劑鏌ㄥ┑鍡椻偓鍛婄?
   }
 };
 
@@ -212,7 +201,10 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const [searchString, setSearchString] = useState("");
   const [val, setVal] = useState("");
   const [searchEngineCards, setSearchEngineCards] = useState<any[]>([]);
-  const [renderCount, setRenderCount] = useState(getInitialRenderCount);
+  const [scrollTop, setScrollTop] = useState(0);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [columnCount, setColumnCount] = useState(1);
+  const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT);
   const [showBackTop, setShowBackTop] = useState(false);
   const [savingOrder, setSavingOrder] = useState(false);
   const [draftTools, setDraftTools] = useState<any[]>([]);
@@ -229,7 +221,9 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
 
   const filteredDataRef = useRef<any[]>([]);
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);
-  const loadMoreRafRef = useRef<number | null>(null);
+  const cardsGridRef = useRef<HTMLDivElement | null>(null);
+  const scrollRafRef = useRef<number | null>(null);
+  const scrollClassTimerRef = useRef<number | null>(null);
   const originalSnapshotRef = useRef<{ tools: any[]; tags: string[] } | null>(null);
   const cardDragRef = useRef<CardDragSession | null>(null);
   const tagDragRef = useRef<TagDragSession | null>(null);
@@ -268,7 +262,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       const fetched = await fetchHomeData();
       let result = fetched ? normalizeHomeData(fetched) : null;
       if (!result && !hasUsableHomeData(localCacheData)) {
-        // 命中 304 且本地缓存不可用时，清理 ETag 后强制回源一次，避免页面停留在空数据状态。
+        // 闂傚倷绀侀幉锛勭矙閹烘鍨傛繝闈涱儐閸?304 婵犵數鍋為崹鍫曞箰鐠囧樊娼栭柣鐔峰簻閼板灝霉閸忓吋缍戦柟鐟扮埣閺岀喎鈻撻崹顔界亾婵犮垼娉涚€氫即骞冨Δ鈧埥澶娾枍椤撯€充汗缂侇噮鍘藉鍕箛椤掑倻鍘俊鐐€栭悧妤冨垝瀹ュ姹查煫鍥ㄧ⊕閻撴盯鏌涢幇闈涘季闁哥喎娲ㄧ槐鎺撴綇閵娧呯暤闂侀潧妫欑敮鈥崇暦閵娾晩鏁嶆繛鎴炃氶崑?ETag 闂傚倷绀侀幉锟犳嚌閻愵剦娈界紒瀣儥閸熷懘姊洪鈧粔瀵哥矆閸℃稒鍋ｉ柧蹇曟嚀閸斿绱掗埀顒勫焵椤掆偓閳规垿鎮╁▎蹇擃仼濠殿喖鍟扮槐鎺楀籍閳ь剙顭囧▎鎾崇厺閹兼番鍔岄悡锟犳煕濞戝崬鐏ｆい锔诲櫍濮婄粯绗熼崶褍顫╅梺璇茬箲缁诲牆鐣烽姀銈呂ч柛鈩冨姃缁ㄥ姊哄Ч鍥х仼闁规祴鈧剚娴栭柕濞炬櫆閻撴洟鎮楅敐搴′簽闁活厼鐭傞弻锟犲幢韫囨挷澹曢梻鍌欑窔濞艰崵鎷归悢鐓庣閹兼番鍔岄悡姗€鏌″搴″箹闁哄绶氶弻锝呂旈埀顒勬偋閸℃瑧鐭堥柨鏇炲€归悡鐔镐繆椤栨氨浠㈤柣鎾村姍閺屽秷顧侀柛蹇旂洴濮婅棄顓兼径濠勫姦?
         clearHomeEtagCache();
         const retryFetched = await FetchList();
         result = retryFetched ? normalizeHomeData(retryFetched) : null;
@@ -284,11 +278,11 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       writeHomeStorageCache(result);
       applyTagFromData(result);
     } catch (error) {
-      console.error("加载首页数据失败:", error);
+      console.error("闂傚倷绀侀幉鈥愁潖缂佹ɑ鍙忛柟顖ｇ亹瑜版帒鐐婃い顓熷笧绾鹃箖姊洪崫鍕枆闁告ê缍婇崺鈧い鎺嗗亾妞わ箓娼ч锝夘敃閿旇棄浜遍梺鍓插亝缁诲嫰濡堕敂鐣岀瘈闁靛繆鈧啿濮哥紓渚囧枛婢т粙骞?", error);
     } finally {
       if (process.env.NODE_ENV !== "production" && perfStart) {
         const cost = Math.round(performance.now() - perfStart);
-        console.info(`[perf] 首页 loadData 耗时: ${cost}ms`);
+        console.info(`[perf] 婵犵妲呴崑鎾跺緤妤ｅ啯鍋嬮柣妯款嚙杩?loadData 闂傚倷娴囬崑鎰櫠濡ゅ懌鈧啴宕卞Δ濠冨瘜? ${cost}ms`);
       }
       setLoading(false);
     }
@@ -306,7 +300,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     if (process.env.NODE_ENV !== "production") {
       requestAnimationFrame(() => {
         const cards = filteredDataRef.current.length;
-        console.info(`[perf] 首页首次可渲染完成，卡片数: ${cards}`);
+        console.info(`[perf] 婵犵妲呴崑鎾跺緤妤ｅ啯鍋嬮柣妯款嚙杩濇繝銏ｆ硾椤戞垹妲愰弮鍫熺厸鐎广儱娴烽崢娑㈡煕鐎ｆ柨娲﹂悡鏇熺箾閸℃◤顏堟倶閿熺姵鍋￠柡鍥╁仦椤ャ垻鈧鍠栭…鐑界嵁濡櫣鏆﹂柛銉ｅ妽椤斿懘姊绘担鐑樺殌闁宦板姂瀹曟繆顦存俊鍙夊姇閳规垹鈧綆浜為、鍛存⒑閹稿海鈽夐悗姘煎墴閵嗗倹绻濆顓犲幐? ${cards}`);
       });
     }
   }, [loading]);
@@ -354,7 +348,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         const cards = await generateSearchEngineCard(deferredSearchString);
         setSearchEngineCards(cards);
       } catch (error) {
-        console.error("加载搜索引擎卡片失败:", error);
+        console.error("闂佸憡姊绘慨鎯归崶顒€绠规繝濠傛噹閸嬪秶鈧鍠楀ú姗€骞栭幖浣哥闁挎稑瀚。璇差熆閹壆绨块悷?", error);
         setSearchEngineCards([]);
       }
     };
@@ -435,37 +429,64 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   }, [filteredData]);
 
   useEffect(() => {
-    const total = filteredData.length;
-    const initialCount = Math.min(getInitialRenderCount(), total);
-    setRenderCount(initialCount);
-  }, [filteredData]);
+    const wrapper = contentWrapperRef.current;
+    if (!wrapper) {
+      return;
+    }
+    const updateViewport = () => {
+      const next = wrapper.clientHeight;
+      setViewportHeight((prev) => (prev === next ? prev : next));
+    };
+    updateViewport();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateViewport);
+      return () => window.removeEventListener("resize", updateViewport);
+    }
+    const observer = new ResizeObserver(updateViewport);
+    observer.observe(wrapper);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
-    if (editMode) {
+    const grid = cardsGridRef.current;
+    if (!grid || editMode || loading) {
       return;
     }
-    const container = contentWrapperRef.current;
-    if (!container) {
-      return;
+    const updateGridMetrics = () => {
+      const style = window.getComputedStyle(grid);
+      const columns = Math.max(1, style.gridTemplateColumns.split(" ").filter(Boolean).length);
+      setColumnCount((prev) => (prev === columns ? prev : columns));
+      const rowGap = Number.parseFloat(style.rowGap || style.gap || "0") || 0;
+      const firstCard = grid.querySelector(".card-box") as HTMLElement | null;
+      if (!firstCard) {
+        return;
+      }
+      const nextRowHeight = Math.max(1, Math.round(firstCard.getBoundingClientRect().height + rowGap));
+      setRowHeight((prev) => (Math.abs(prev - nextRowHeight) < 2 ? prev : nextRowHeight));
+    };
+    const raf = window.requestAnimationFrame(updateGridMetrics);
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateGridMetrics);
+      return () => {
+        window.cancelAnimationFrame(raf);
+        window.removeEventListener("resize", updateGridMetrics);
+      };
     }
-    if (renderCount >= filteredData.length) {
-      return;
-    }
-    // 当首屏不足一屏时，继续补一批，避免出现大片空白。
-    const needsFillViewport = container.scrollHeight <= container.clientHeight + 24;
-    if (!needsFillViewport) {
-      return;
-    }
-    const raf = window.requestAnimationFrame(() => {
-      setRenderCount((prev) => Math.min(prev + FRAME_BATCH_COUNT, filteredData.length));
-    });
-    return () => window.cancelAnimationFrame(raf);
-  }, [renderCount, filteredData.length, editMode]);
+    const observer = new ResizeObserver(updateGridMetrics);
+    observer.observe(grid);
+    return () => {
+      window.cancelAnimationFrame(raf);
+      observer.disconnect();
+    };
+  }, [editMode, loading, filteredData.length, data?.siteConfig?.compactMode]);
 
   useEffect(() => {
     return () => {
-      if (loadMoreRafRef.current !== null) {
-        window.cancelAnimationFrame(loadMoreRafRef.current);
+      if (scrollRafRef.current !== null) {
+        window.cancelAnimationFrame(scrollRafRef.current);
+      }
+      if (scrollClassTimerRef.current !== null) {
+        window.clearTimeout(scrollClassTimerRef.current);
       }
     };
   }, []);
@@ -501,86 +522,32 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     return () => document.removeEventListener("keydown", onKeyEnter);
   }, [deferredSearchString, onKeyEnter, editMode]);
 
-  const renderedCards = useMemo(() => filteredData.slice(0, renderCount), [filteredData, renderCount]);
-
-  useEffect(() => {
-    if (searchString.trim() !== "" || editMode) {
-      return;
-    }
-    const nextBatch = filteredData.slice(renderCount, renderCount + IDLE_PREWARM_COUNT);
-    if (!nextBatch.length) {
-      return;
-    }
-    const preload = () => {
-      const createdLinks: HTMLLinkElement[] = [];
-      nextBatch.forEach((item: any) => {
-        if (!item?.logo || item.url === "admin" || item.url === "toggleJumpTarget") {
-          return;
-        }
-        if (prewarmedLogoSet.has(item.logo)) {
-          return;
-        }
-        if (prewarmedLogoSet.size >= MAX_PREWARMED_LOGOS) {
-          return;
-        }
-        prewarmedLogoSet.add(item.logo);
-        const link = document.createElement("link");
-        link.rel = "prefetch";
-        link.as = "image";
-        link.href = `/api/img?url=${encodeURIComponent(item.logo)}`;
-        const cleanup = () => {
-          link.removeEventListener("load", cleanup);
-          link.removeEventListener("error", cleanup);
-          link.remove();
-        };
-        link.addEventListener("load", cleanup, { once: true });
-        link.addEventListener("error", cleanup, { once: true });
-        document.head.appendChild(link);
-        createdLinks.push(link);
-      });
-      return createdLinks;
-    };
-    const idleCallback = (window as any).requestIdleCallback;
-    const cancelIdleCallback = (window as any).cancelIdleCallback;
-    if (typeof idleCallback === "function") {
-      let links: HTMLLinkElement[] = [];
-      const id = idleCallback(() => {
-        links = preload() ?? [];
-      }, { timeout: 1000 });
-      return () => {
-        cancelIdleCallback?.(id);
-        links.forEach((link) => link.remove());
-      };
-    }
-    let links: HTMLLinkElement[] = [];
-    const timer = window.setTimeout(() => {
-      links = preload() ?? [];
-    }, 160);
-    return () => {
-      window.clearTimeout(timer);
-      links.forEach((link) => link.remove());
-    };
-  }, [filteredData, renderCount, searchString, editMode]);
+  const renderedCards = filteredData;
 
   const handleContentScroll = useCallback((ev: any) => {
     const currentTarget = ev.currentTarget as HTMLDivElement;
+    if (!currentTarget.classList.contains("is-scrolling")) {
+      currentTarget.classList.add("is-scrolling");
+    }
+    if (scrollClassTimerRef.current !== null) {
+      window.clearTimeout(scrollClassTimerRef.current);
+    }
+    scrollClassTimerRef.current = window.setTimeout(() => {
+      currentTarget.classList.remove("is-scrolling");
+      scrollClassTimerRef.current = null;
+    }, 120);
+
+    const nextScrollTop = currentTarget.scrollTop;
+    if (scrollRafRef.current === null) {
+      scrollRafRef.current = window.requestAnimationFrame(() => {
+        scrollRafRef.current = null;
+        setScrollTop(nextScrollTop);
+      });
+    }
+
     const nextShow = currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
     setShowBackTop((prev) => (prev === nextShow ? prev : nextShow));
-    if (editMode || renderCount >= filteredData.length) {
-      return;
-    }
-    const nearBottom = currentTarget.scrollTop + currentTarget.clientHeight >= currentTarget.scrollHeight - 320;
-    if (!nearBottom) {
-      return;
-    }
-    if (loadMoreRafRef.current !== null) {
-      return;
-    }
-    loadMoreRafRef.current = window.requestAnimationFrame(() => {
-      loadMoreRafRef.current = null;
-      setRenderCount((prev) => Math.min(prev + FRAME_BATCH_COUNT, filteredData.length));
-    });
-  }, [editMode, renderCount, filteredData.length]);
+  }, []);
 
   const scrollToTop = useCallback(() => {
     contentWrapperRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -676,16 +643,16 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
           return item.key === "allSort" && status === 404;
         });
         if (hasAllSort404) {
-          notifyError("保存失败：后端未启用“全部工具排序”接口，请重启后端服务后重试。");
+          notifyError("保存失败：后端未启用全部工具排序接口，请重启后端服务后重试。");
           return;
         }
         const hasSqliteBusy = failed.some((item) => String((item.result.reason as any)?.response?.data?.errorMessage ?? "").includes("SQLITE_BUSY"));
         if (hasSqliteBusy) {
-          notifyError("保存失败：数据库繁忙，请稍后重试（已改为串行提交，若仍出现请重启后端）。");
+          notifyError("保存失败：数据库繁忙，请稍后重试。");
           return;
         }
-        const failKeys = failed.map((item) => item.key).join("、");
-        notifyError(`保存失败：${failKeys} 提交失败，请重试。`);
+        const failKeys = failed.map((item) => item.key).join(", ");
+        notifyError(`保存失败：${failKeys}`);
         return;
       }
 
@@ -702,7 +669,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       await loadData();
     } catch (error) {
       console.error("保存布局失败:", error);
-      notifyError("保存失败，已保留当前草稿，请重试");
+      notifyError("保存失败，已保留当前草稿，请重试。");
     } finally {
       setSavingOrder(false);
     }
@@ -720,8 +687,39 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
 
   const resolveTagOrder = useCallback(() => draftTagOrder, [draftTagOrder]);
 
+  const totalRows = useMemo(() => {
+    if (editMode || renderedCards.length === 0) {
+      return 0;
+    }
+    return Math.ceil(renderedCards.length / Math.max(1, columnCount));
+  }, [editMode, renderedCards.length, columnCount]);
+
+  const virtualRange = useMemo(() => {
+    if (editMode || renderedCards.length === 0) {
+      return { startIndex: 0, endIndex: renderedCards.length, topSpacer: 0, bottomSpacer: 0 };
+    }
+    const safeRowHeight = Math.max(1, rowHeight);
+    const visibleRows = Math.max(1, Math.ceil(viewportHeight / safeRowHeight));
+    const startRow = Math.max(0, Math.floor(scrollTop / safeRowHeight) - VIRTUAL_OVERSCAN_ROWS);
+    const endRow = Math.min(totalRows, startRow + visibleRows + VIRTUAL_OVERSCAN_ROWS * 2);
+    const startIndex = startRow * Math.max(1, columnCount);
+    const endIndex = Math.min(renderedCards.length, endRow * Math.max(1, columnCount));
+    return {
+      startIndex,
+      endIndex,
+      topSpacer: startRow * safeRowHeight,
+      bottomSpacer: Math.max(0, (totalRows - endRow) * safeRowHeight),
+    };
+  }, [editMode, renderedCards.length, rowHeight, viewportHeight, scrollTop, totalRows, columnCount]);
+
+  const virtualCards = useMemo(
+    () => renderedCards.slice(virtualRange.startIndex, virtualRange.endIndex),
+    [renderedCards, virtualRange.startIndex, virtualRange.endIndex]
+  );
+
   const renderCardsV2 = useCallback(() => {
-    return renderedCards.map((item, index) => {
+    return virtualCards.map((item, index) => {
+      const absoluteIndex = virtualRange.startIndex + index;
       const isSearchEngineOption = Number(item?.id) >= 8800880000 && Number(item?.id) < 8800999999;
       return (
         <CardV2
@@ -731,7 +729,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
           logo={item?.logo}
           key={item.id}
           catelog={item.catelog}
-          index={index}
+          index={absoluteIndex}
           isSearching={searchString.trim() !== ""}
           noImageMode={data?.siteConfig?.noImageMode || false}
           compactMode={data?.siteConfig?.compactMode || false}
@@ -740,7 +738,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         />
       );
     });
-  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, handleCardClick]);
+  }, [virtualCards, virtualRange.startIndex, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, handleCardClick]);
 
   const commitCardDrag = () => {
     const drag = cardDragRef.current;
@@ -959,11 +957,15 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       </div>
 
       <div className="content-wraper" onScroll={handleContentScroll} ref={contentWrapperRef}>
-        <div className={`content cards ${data?.siteConfig?.compactMode ? "compact-grid" : ""}`}>
+        <div className={`content cards ${data?.siteConfig?.compactMode ? "compact-grid" : ""}`} ref={cardsGridRef}>
           {loading ? (
             <Loading />
           ) : !editMode ? (
-            renderCardsV2()
+            <>
+              {virtualRange.topSpacer > 0 ? <div style={{ height: virtualRange.topSpacer, gridColumn: "1 / -1" }} /> : null}
+              {renderCardsV2()}
+              {virtualRange.bottomSpacer > 0 ? <div style={{ height: virtualRange.bottomSpacer, gridColumn: "1 / -1" }} /> : null}
+            </>
           ) : (
             editableCards.map((item, index) => (
                 <EditableCard
@@ -1015,7 +1017,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
 
       <div className="record-wraper">
         <a href="https://henniubi.com" target="_blank" rel="noreferrer">
-          笔尖码动
+          Fantetic Nav
         </a>
         <br />
         <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">

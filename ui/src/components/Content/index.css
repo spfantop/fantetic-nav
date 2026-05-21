@@ -568,9 +568,34 @@
   min-height: 0;
   height: auto;
 }
+
+/* 滚动时临时关闭高开销特效，优先保障高刷新率下的帧率 */
+.content-wraper.is-scrolling .card-box {
+  transition: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.content-wraper.is-scrolling .card-box:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.content-wraper.is-scrolling .card-loading-spinner {
+  animation: none !important;
+}
 .cards {
   padding-top: 10px;
   padding-bottom: 250px;
+}
+
+/* 让浏览器跳过离屏卡片的绘制，提升高刷新率滚动流畅度 */
+.cards .card-box {
+  content-visibility: auto;
+  contain-intrinsic-size: 88px 260px;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(31, 31, 31, 0.78) !important;
 }
 .record-wraper {
   text-align: center;

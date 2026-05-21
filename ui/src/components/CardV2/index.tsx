@@ -1,4 +1,4 @@
-import { memo, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import { memo, useMemo, useState, useEffect, useCallback } from "react";
 import "./index.css";
 import { getLogoUrl } from "../../utils/check";
 import { getJumpTarget } from "../../utils/setting";
@@ -7,9 +7,6 @@ const loadedImageSrcCache = new Set<string>();
 const failedImageSrcCache = new Set<string>();
 const EAGER_LOAD_COUNT = 10;
 const IMAGE_SRC_CACHE_MAX = 800;
-
-const inViewCallbacks = new Map<Element, (inView: boolean) => void>();
-let sharedObserver: IntersectionObserver | null = null;
 
 const ensureCacheSize = (cache: Set<string>) => {
   if (cache.size < IMAGE_SRC_CACHE_MAX) {
@@ -21,49 +18,13 @@ const ensureCacheSize = (cache: Set<string>) => {
   }
 };
 
-const getSharedObserver = () => {
-  if (sharedObserver) {
-    return sharedObserver;
-  }
-  sharedObserver = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        const callback = inViewCallbacks.get(entry.target);
-        callback?.(entry.isIntersecting);
-      });
-    },
-    {
-      root: document.querySelector(".content-wraper"),
-      rootMargin: "280px 0px",
-      threshold: 0.01,
-    }
-  );
-  return sharedObserver;
-};
-
-const observeCardInView = (element: Element, callback: (inView: boolean) => void) => {
-  const observer = getSharedObserver();
-  inViewCallbacks.set(element, callback);
-  observer.observe(element);
-  return () => {
-    inViewCallbacks.delete(element);
-    observer.unobserve(element);
-    if (inViewCallbacks.size === 0 && sharedObserver) {
-      sharedObserver.disconnect();
-      sharedObserver = null;
-    }
-  };
-};
-
 const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noImageMode, compactMode, showCatelog = true }) => {
-  const cardRef = useRef<HTMLAnchorElement | null>(null);
   const imageSrc = useMemo(() => {
     return url === "admin" ? logo : getLogoUrl(logo);
   }, [logo, url]);
   const [imageLoaded, setImageLoaded] = useState(() => loadedImageSrcCache.has(imageSrc));
   const [imageError, setImageError] = useState(() => failedImageSrcCache.has(imageSrc));
   const [showLoading, setShowLoading] = useState(() => !loadedImageSrcCache.has(imageSrc) && !failedImageSrcCache.has(imageSrc));
-  const [isInView, setIsInView] = useState(index < EAGER_LOAD_COUNT);
 
   useEffect(() => {
     const loadedFromCache = loadedImageSrcCache.has(imageSrc);
@@ -100,15 +61,6 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
     setShowLoading(false);
   }, [imageSrc]);
 
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") {
-      setIsInView(index < EAGER_LOAD_COUNT);
-      return;
-    }
-    return observeCardInView(el, setIsInView);
-  }, [index]);
-
   const imageElement = useMemo(() => {
     if (imageError) {
       return (
@@ -118,7 +70,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
       );
     }
 
-    const shouldEagerLoad = (!isSearching && index < EAGER_LOAD_COUNT) || isInView;
+    const shouldEagerLoad = !isSearching && index < EAGER_LOAD_COUNT;
     return (
       <>
         {showLoading && !imageLoaded && <div className="card-loading-spinner"></div>}
@@ -136,7 +88,7 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
         />
       </>
     );
-  }, [imageSrc, title, imageLoaded, imageError, showLoading, handleImageLoad, handleImageError, index, isSearching, isInView]);
+  }, [imageSrc, title, imageLoaded, imageError, showLoading, handleImageLoad, handleImageError, index, isSearching]);
 
   const displayCatelog = useMemo(() => {
     return catelog === null || catelog === undefined || catelog === "" || (typeof catelog === "string" && catelog.trim() === "") ? "未分类" : catelog;
@@ -145,7 +97,6 @@ const Card = ({ title, url, des, logo, catelog, onClick, index, isSearching, noI
   const showNumIndex = index < 10 && isSearching;
   return (
     <a
-      ref={cardRef}
       href={url === "toggleJumpTarget" ? undefined : url}
       onClick={() => {
         onClick(url);

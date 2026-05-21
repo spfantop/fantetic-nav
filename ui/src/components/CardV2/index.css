@@ -73,7 +73,7 @@ body.dark-mode .card-index {
 }
 
 .card-left > img {
-    filter: brightness(0.75);
+    filter: none;
 }
 
 /* 确保card-left有相对定位以便加载指示器正确显示 */
