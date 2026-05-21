@@ -1,8 +1,8 @@
-import { App, Button, Card, Form, Input, Select, Spin, Switch } from 'antd';
-import { useCallback, useEffect } from 'react';
-import { fetchUpdateSetting, fetchUpdateSiteConfig, fetchUpdateUser } from '../../../utils/api';
-import { useData } from '../hooks/useData';
-import './Setting.css';
+import { App, Button, Card, Form, Input, Select, Spin, Switch } from "antd";
+import { useCallback, useEffect } from "react";
+import { fetchUpdateSetting, fetchUpdateSiteConfig, fetchUpdateUser } from "../../../utils/api";
+import { useData } from "../hooks/useData";
+import "./Setting.css";
 
 export interface SettingProps {}
 
@@ -23,42 +23,42 @@ export const Setting: React.FC<SettingProps> = () => {
     async (values: any) => {
       try {
         await fetchUpdateUser({ ...values, id: store?.user?.id });
-        message.success('修改成功');
+        message.success("修改成功");
       } catch {
-        message.warning('修改失败');
+        message.warning("修改失败");
       } finally {
         reload();
       }
     },
-    [reload, store]
+    [message, reload, store]
   );
 
   const handleUpdateWebSite = useCallback(
     async (values: any) => {
       try {
         await fetchUpdateSetting(values);
-        message.success('修改成功');
+        message.success("修改成功");
       } catch {
-        message.warning('修改失败');
+        message.warning("修改失败");
       } finally {
         reload();
       }
     },
-    [reload]
+    [message, reload]
   );
 
   const handleUpdateSiteConfig = useCallback(
     async (values: any) => {
       try {
         await fetchUpdateSiteConfig(values);
-        message.success('修改成功');
+        message.success("修改成功");
       } catch {
-        message.warning('修改失败');
+        message.warning("修改失败");
       } finally {
         reload();
       }
     },
-    [reload]
+    [message, reload]
   );
 
   return (
@@ -94,7 +94,7 @@ export const Setting: React.FC<SettingProps> = () => {
               name="favicon"
               tooltip="输入 logo 的 URL，仅支持 png 或 svg 格式"
               required
-              rules={[{ required: true, message: '请输入网站 logo 链接' }]}
+              rules={[{ required: true, message: "请输入网站 logo 链接" }]}
             >
               <Input placeholder="请输入网站 logo" />
             </Form.Item>
@@ -102,7 +102,7 @@ export const Setting: React.FC<SettingProps> = () => {
               label="网站标题"
               name="title"
               required
-              rules={[{ required: true, message: '请输入网站标题' }]}
+              rules={[{ required: true, message: "请输入网站标题" }]}
             >
               <Input placeholder="请输入网站标题" />
             </Form.Item>
@@ -110,27 +110,27 @@ export const Setting: React.FC<SettingProps> = () => {
               <Input placeholder="请输入网站备案信息" />
             </Form.Item>
             <Form.Item label="底部文案" name="footerName">
-              <Input placeholder="例如：笔尖码动" />
+              <Input placeholder="例如：Fantetic Nav" />
             </Form.Item>
             <Form.Item
               label="底部链接"
               name="footerLink"
-              rules={[{ type: 'url', message: '请输入合法 URL（含 http/https）' }]}
+              rules={[{ type: "url", message: "请输入合法 URL（含 http/https）" }]}
             >
-              <Input placeholder="例如：https://henniubi.com" />
+              <Input placeholder="例如：https://fantetic-nav.dev" />
             </Form.Item>
 
             <Form.Item
               label="默认跳转方式"
               name="jumpTargetBlank"
-              rules={[{ required: true, message: '这是必填项' }]}
+              rules={[{ required: true, message: "这是必填项" }]}
               tooltip="选择点击卡片后的默认跳转方式"
             >
               <Select
-                classNames={{ popup: { root: "admin-setting-select-popup" } }}
+                {...({ classNames: { popup: { root: "admin-setting-select-popup" } } } as any)}
                 options={[
-                  { label: '原地跳转', value: false },
-                  { label: '新标签页', value: true },
+                  { label: "原地跳转", value: false },
+                  { label: "新标签页", value: true },
                 ]}
               />
             </Form.Item>
@@ -138,14 +138,14 @@ export const Setting: React.FC<SettingProps> = () => {
             <Form.Item
               label="logo 192x192"
               name="logo192"
-              rules={[{ required: true, message: '请输入 192x192 的 logo 链接' }]}
+              rules={[{ required: true, message: "请输入 192x192 的 logo 链接" }]}
             >
               <Input placeholder="192x192 logo 链接" />
             </Form.Item>
             <Form.Item
               label="logo 512x512"
               name="logo512"
-              rules={[{ required: true, message: '请输入 512x512 的 logo 链接' }]}
+              rules={[{ required: true, message: "请输入 512x512 的 logo 链接" }]}
             >
               <Input placeholder="512x512 logo 链接" />
             </Form.Item>

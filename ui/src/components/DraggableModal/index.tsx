@@ -4,9 +4,16 @@ import type { ModalProps } from "antd";
 
 type DraggableModalProps = ModalProps & {
   visible?: boolean;
+  destroyOnHidden?: boolean;
 };
 
-export const DraggableModal: React.FC<DraggableModalProps> = ({ title, open, visible, ...rest }) => {
+export const DraggableModal: React.FC<DraggableModalProps> = ({
+  title,
+  open,
+  visible,
+  destroyOnHidden,
+  ...rest
+}) => {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const dragRef = useRef({
     dragging: false,
@@ -36,11 +43,13 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({ title, open, vis
               y: dragRef.current.originY + dy,
             });
           };
+
           const onUp = () => {
             dragRef.current.dragging = false;
             window.removeEventListener("mousemove", onMove);
             window.removeEventListener("mouseup", onUp);
           };
+
           window.addEventListener("mousemove", onMove);
           window.addEventListener("mouseup", onUp);
         }}
@@ -54,6 +63,7 @@ export const DraggableModal: React.FC<DraggableModalProps> = ({ title, open, vis
     <Modal
       {...rest}
       open={open ?? visible}
+      {...(destroyOnHidden !== undefined ? ({ destroyOnHidden } as any) : {})}
       okText={rest.okText ?? "确定"}
       cancelText={rest.cancelText ?? "取消"}
       title={titleNode}
