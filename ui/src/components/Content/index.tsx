@@ -228,8 +228,8 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   const deferredSearchString = useDeferredValue(searchString);
 
   const filteredDataRef = useRef<any[]>([]);
-  const renderRafRef = useRef<number | null>(null);
   const contentWrapperRef = useRef<HTMLDivElement | null>(null);
+  const loadMoreRafRef = useRef<number | null>(null);
   const originalSnapshotRef = useRef<{ tools: any[]; tags: string[] } | null>(null);
   const cardDragRef = useRef<CardDragSession | null>(null);
   const tagDragRef = useRef<TagDragSession | null>(null);
@@ -246,13 +246,6 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
         ? nextData.catelogs.find((tag: string) => tag !== ALL_TOOLS_TAG) ?? nextData.catelogs[0]
         : DEFAULT_TAG;
     setCurrTag(defaultTag);
-  }, []);
-
-  const stopRenderRaf = useCallback(() => {
-    if (renderRafRef.current !== null) {
-      window.cancelAnimationFrame(renderRafRef.current);
-      renderRafRef.current = null;
-    }
   }, []);
 
   const loadData = useCallback(async () => {
@@ -369,7 +362,16 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     loadSearchEngineCards();
   }, [deferredSearchString, editMode]);
 
-  const handleSetCurrTag = (tag: string) => {
+  const resetSearch = useCallback((notSetTag?: boolean) => {
+    setVal("");
+    setSearchString("");
+    const tagInLocalStorage = window.localStorage.getItem("tag");
+    if (!notSetTag && tagInLocalStorage && tagInLocalStorage !== ADMIN_TAG) {
+      setCurrTag(tagInLocalStorage);
+    }
+  }, []);
+
+  const handleSetCurrTag = useCallback((tag: string) => {
     setCurrTag(tag);
     if (tag !== ADMIN_TAG) {
       window.localStorage.setItem("tag", tag);
@@ -381,18 +383,9 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       setTagTargetId(null);
     }
     resetSearch(true);
-  };
+  }, [editMode, resetSearch]);
 
-  const resetSearch = (notSetTag?: boolean) => {
-    setVal("");
-    setSearchString("");
-    const tagInLocalStorage = window.localStorage.getItem("tag");
-    if (!notSetTag && tagInLocalStorage && tagInLocalStorage !== ADMIN_TAG) {
-      setCurrTag(tagInLocalStorage);
-    }
-  };
-
-  const handleSetSearch = (nextVal: string) => {
+  const handleSetSearch = useCallback((nextVal: string) => {
     if (editMode) {
       return;
     }
@@ -402,7 +395,7 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       return;
     }
     resetSearch();
-  };
+  }, [editMode, resetSearch]);
 
   const tagsForRender = useMemo(
     () => (editMode ? draftTagOrder : mergeTagOrder(sortTags(data?.catelogs ?? [ALL_TOOLS_TAG]), readTagOrder())),
@@ -442,31 +435,40 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   }, [filteredData]);
 
   useEffect(() => {
-    stopRenderRaf();
     const total = filteredData.length;
     const initialCount = Math.min(getInitialRenderCount(), total);
     setRenderCount(initialCount);
+  }, [filteredData]);
 
-    if (total <= initialCount) {
+  useEffect(() => {
+    if (editMode) {
       return;
     }
+    const container = contentWrapperRef.current;
+    if (!container) {
+      return;
+    }
+    if (renderCount >= filteredData.length) {
+      return;
+    }
+    // 当首屏不足一屏时，继续补一批，避免出现大片空白。
+    const needsFillViewport = container.scrollHeight <= container.clientHeight + 24;
+    if (!needsFillViewport) {
+      return;
+    }
+    const raf = window.requestAnimationFrame(() => {
+      setRenderCount((prev) => Math.min(prev + FRAME_BATCH_COUNT, filteredData.length));
+    });
+    return () => window.cancelAnimationFrame(raf);
+  }, [renderCount, filteredData.length, editMode]);
 
-    const appendNextFrame = () => {
-      setRenderCount((prev) => {
-        const next = Math.min(prev + FRAME_BATCH_COUNT, total);
-        if (next < total) {
-          renderRafRef.current = window.requestAnimationFrame(appendNextFrame);
-        } else {
-          renderRafRef.current = null;
-        }
-        return next;
-      });
+  useEffect(() => {
+    return () => {
+      if (loadMoreRafRef.current !== null) {
+        window.cancelAnimationFrame(loadMoreRafRef.current);
+      }
     };
-
-    renderRafRef.current = window.requestAnimationFrame(appendNextFrame);
-
-    return () => stopRenderRaf();
-  }, [filteredData, stopRenderRaf]);
+  }, []);
 
   const onKeyEnter = useCallback(
     (ev: KeyboardEvent) => {
@@ -561,9 +563,24 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
   }, [filteredData, renderCount, searchString, editMode]);
 
   const handleContentScroll = useCallback((ev: any) => {
-    const nextShow = ev.currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
+    const currentTarget = ev.currentTarget as HTMLDivElement;
+    const nextShow = currentTarget.scrollTop > BACK_TO_TOP_THRESHOLD;
     setShowBackTop((prev) => (prev === nextShow ? prev : nextShow));
-  }, []);
+    if (editMode || renderCount >= filteredData.length) {
+      return;
+    }
+    const nearBottom = currentTarget.scrollTop + currentTarget.clientHeight >= currentTarget.scrollHeight - 320;
+    if (!nearBottom) {
+      return;
+    }
+    if (loadMoreRafRef.current !== null) {
+      return;
+    }
+    loadMoreRafRef.current = window.requestAnimationFrame(() => {
+      loadMoreRafRef.current = null;
+      setRenderCount((prev) => Math.min(prev + FRAME_BATCH_COUNT, filteredData.length));
+    });
+  }, [editMode, renderCount, filteredData.length]);
 
   const scrollToTop = useCallback(() => {
     contentWrapperRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -691,6 +708,14 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
     }
   };
 
+  const handleCardClick = useCallback((url: string) => {
+    resetSearch();
+    if (url === "toggleJumpTarget") {
+      toggleJumpTarget();
+      loadData();
+    }
+  }, [loadData, resetSearch]);
+
   const resolveCardOrder = useCallback(() => filteredData, [filteredData]);
 
   const resolveTagOrder = useCallback(() => draftTagOrder, [draftTagOrder]);
@@ -711,17 +736,11 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
           noImageMode={data?.siteConfig?.noImageMode || false}
           compactMode={data?.siteConfig?.compactMode || false}
           showCatelog={!isSearchEngineOption}
-          onClick={() => {
-            resetSearch();
-            if (item.url === "toggleJumpTarget") {
-              toggleJumpTarget();
-              loadData();
-            }
-          }}
+          onClick={handleCardClick}
         />
       );
     });
-  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, loadData]);
+  }, [renderedCards, searchString, data?.siteConfig?.noImageMode, data?.siteConfig?.compactMode, handleCardClick]);
 
   const commitCardDrag = () => {
     const drag = cardDragRef.current;
