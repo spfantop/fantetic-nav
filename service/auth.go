@@ -14,14 +14,18 @@ func GetApiTokens() []types.Token {
 		`
 	results := make([]types.Token, 0)
 	rows, err := database.DB.Query(sql_get_api_tokens)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return results
+	}
+	defer rows.Close()
 	for rows.Next() {
 		var token types.Token
 		err = rows.Scan(&token.Id, &token.Name, &token.Value, &token.Disabled)
-		utils.CheckErr(err)
+		if utils.CheckErr(err) {
+			continue
+		}
 		results = append(results, token)
 	}
-	defer rows.Close()
 	return results
 }
 
@@ -45,18 +49,21 @@ func AddApiTokenInDB(data types.Token) {
 		VALUES (?,?,?,?);
 		`
 	stmt, err := database.DB.Prepare(sql_add_api_token)
-	utils.CheckErr(err)
-
+	if utils.CheckErr(err) {
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.Id, data.Name, data.Value, data.Disabled)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 	_, err = res.LastInsertId()
 	utils.CheckErr(err)
 }
 
 func UpdateUser(data types.UpdateUserDto) {
 	hashedPassword, err := utils.HashPassword(data.Password)
-	utils.CheckErr(err)
-	if hashedPassword == "" {
+	if utils.CheckErr(err) {
 		return
 	}
 	sql_update_user := `
@@ -65,9 +72,14 @@ func UpdateUser(data types.UpdateUserDto) {
 		WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_update_user)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.Name, hashedPassword, data.Id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
 }
@@ -79,8 +91,7 @@ func UpdateUserPassword(id int, hashedPassword string) {
 		WHERE id = ?;
 	`
 	stmt, err := database.DB.Prepare(sqlUpdatePassword)
-	utils.CheckErr(err)
-	if stmt == nil {
+	if utils.CheckErr(err) {
 		return
 	}
 	defer stmt.Close()

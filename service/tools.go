@@ -13,7 +13,6 @@ import (
 func ImportTools(data []types.Tool) {
 	var catelogs []string
 	for _, v := range data {
-		// 过滤掉空分类，只收集有效的分类名称
 		if v.Catelog != "" && strings.TrimSpace(v.Catelog) != "" && !utils.In(v.Catelog, catelogs) {
 			catelogs = append(catelogs, v.Catelog)
 		}
@@ -22,45 +21,53 @@ func ImportTools(data []types.Tool) {
 			VALUES (?, ?, ?, ?, ?, ?);
 			`
 		stmt, err := database.DB.Prepare(sql_add_tool)
-		utils.CheckErr(err)
+		if utils.CheckErr(err) {
+			continue
+		}
 		res, err := stmt.Exec(v.Id, v.Name, v.Catelog, v.Url, v.Logo, v.Desc)
-		utils.CheckErr(err)
+		if utils.CheckErr(err) {
+			stmt.Close()
+			continue
+		}
 		_, err = res.LastInsertId()
 		utils.CheckErr(err)
+		stmt.Close()
 	}
 	for _, catelog := range catelogs {
 		var addCatelogDto types.AddCatelogDto
 		addCatelogDto.Name = catelog
 		AddCatelog(addCatelogDto)
 	}
-	// 转存所有图片,异步
 	go func(data []types.Tool) {
 		for _, v := range data {
 			UpdateImg(v.Logo)
 		}
 	}(data)
-
+	InvalidateCache()
 }
 
 func UpdateTool(data types.UpdateToolDto) {
-	// 除了更新工具本身之外，也要更新 img 表
 	sql_update_tool := `
 		UPDATE nav_table
 		SET name = ?, url = ?, logo = ?, catelog = ?, desc = ?, sort = ?, allSort = ?, hide = ?
 		WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_update_tool)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.Name, data.Url, data.Logo, data.Catelog, data.Desc, data.Sort, data.Sort, data.Hide, data.Id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
-	// 更新 img
+	InvalidateCache()
 	UpdateImg(data.Logo)
 }
 
 func AddTool(data types.AddToolDto) (int64, error) {
-	// 创建一个互斥锁来保护数据库操作
 	var mu sync.Mutex
 	mu.Lock()
 	defer mu.Unlock()
@@ -100,13 +107,47 @@ func AddTool(data types.AddToolDto) (int64, error) {
 		return 0, err
 	}
 	logger.LogInfo("新增工具: %s", data.Name)
+	InvalidateCache()
 
-	// 在事务完成后再异步更新图片
 	if data.Logo != "" {
 		UpdateImg(data.Logo)
 	}
 
 	return id, nil
+}
+
+func boolFromSQL(val interface{}) bool {
+	if val == nil {
+		return false
+	}
+	switch v := val.(type) {
+	case bool:
+		return v
+	case int64:
+		return v != 0
+	case float64:
+		return v != 0
+	case string:
+		return v == "1" || strings.ToLower(v) == "true"
+	default:
+		return false
+	}
+}
+
+func intFromSQL(val interface{}, defaultVal int) int {
+	if val == nil {
+		return defaultVal
+	}
+	switch v := val.(type) {
+	case int64:
+		return int(v)
+	case float64:
+		return int(v)
+	case int:
+		return v
+	default:
+		return defaultVal
+	}
 }
 
 func GetAllTool() []types.Tool {
@@ -115,38 +156,24 @@ func GetAllTool() []types.Tool {
 		`
 	results := make([]types.Tool, 0)
 	rows, err := database.DB.Query(sql_get_all)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return results
+	}
+	defer rows.Close()
 	for rows.Next() {
 		var tool types.Tool
 		var hide interface{}
 		var sort interface{}
 		var allSort interface{}
 		err = rows.Scan(&tool.Id, &tool.Name, &tool.Url, &tool.Logo, &tool.Catelog, &tool.Desc, &sort, &allSort, &hide)
-		if hide == nil {
-			tool.Hide = false
-		} else {
-			if hide.(int64) == 0 {
-				tool.Hide = false
-			} else {
-				tool.Hide = true
-			}
+		if utils.CheckErr(err) {
+			continue
 		}
-		if sort == nil {
-			tool.Sort = 0
-		} else {
-			i64 := sort.(int64)
-			tool.Sort = int(i64)
-		}
-		if allSort == nil {
-			tool.AllSort = tool.Sort
-		} else {
-			i64 := allSort.(int64)
-			tool.AllSort = int(i64)
-		}
-		utils.CheckErr(err)
+		tool.Hide = boolFromSQL(hide)
+		tool.Sort = intFromSQL(sort, 0)
+		tool.AllSort = intFromSQL(allSort, tool.Sort)
 		results = append(results, tool)
 	}
-	defer rows.Close()
 	return results
 }
 
@@ -155,14 +182,15 @@ func GetToolLogoUrlById(id int) string {
 		SELECT logo FROM nav_table WHERE id=?;
 		`
 	rows, err := database.DB.Query(sql_get_tool, id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return ""
+	}
+	defer rows.Close()
 	var tool types.Tool
 	for rows.Next() {
 		err = rows.Scan(&tool.Logo)
 		utils.CheckErr(err)
-
 	}
-	defer rows.Close()
 	return tool.Logo
 }
 
@@ -196,7 +224,11 @@ func UpdateToolsSort(updates []types.UpdateToolsSortDto) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err == nil {
+		InvalidateCache()
+	}
+	return err
 }
 
 func UpdateToolsAllSort(updates []types.UpdateToolsAllSortDto) error {
@@ -221,5 +253,9 @@ func UpdateToolsAllSort(updates []types.UpdateToolsAllSortDto) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err == nil {
+		InvalidateCache()
+	}
+	return err
 }

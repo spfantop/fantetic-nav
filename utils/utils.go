@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"io"
@@ -15,18 +16,24 @@ import (
 	"github.com/mereith/nav/types"
 )
 
-func CheckErr(err error) {
+func CheckErr(err error) bool {
 	if err != nil {
 		logger.LogError("捕获到错误：%s, 堆栈信息：%s", err, string(debug.Stack()))
+		return true
 	}
+	return false
 }
 
-func CheckTxErr(err error, tx *sql.Tx) {
+func CheckTxErr(err error, tx *sql.Tx) bool {
 	if err != nil {
 		logger.LogError("出现事务异常，回滚事务: %s, 堆栈信息：%s", err, string(debug.Stack()))
 		err2 := tx.Rollback()
-		CheckErr(err2)
+		if err2 != nil {
+			logger.LogError("事务回滚失败: %s", err2)
+		}
+		return true
 	}
+	return false
 }
 
 func In(target string, str_array []string) bool {
@@ -44,7 +51,6 @@ func GetImgBase64FromUrl(url string) string {
 	if parseErr != nil || parsedURL == nil || (parsedURL.Scheme != "http" && parsedURL.Scheme != "https") {
 		return ""
 	}
-	//获取远端图片
 	req, err := http.NewRequest("GET", imgUrl, nil)
 	if err != nil {
 		CheckErr(err)
@@ -68,7 +74,6 @@ func GetImgBase64FromUrl(url string) string {
 		return ""
 	}
 
-	// 限制读取大小，避免超大响应导致内存压力
 	limitedBody := io.LimitReader(res.Body, 2*1024*1024)
 	data, readErr := io.ReadAll(limitedBody)
 	if readErr != nil {
@@ -89,21 +94,6 @@ func GetImgBase64FromUrl(url string) string {
 	return imageBase64
 }
 
-func GetSuffixFromUrl(url string) string {
-	suffix := url[strings.LastIndex(url, "."):]
-	return suffix
-}
-func GetMIME(suffix string) string {
-	var t string = "image/x-icon"
-	if suffix == ".svg" {
-		t = "image/svg+xml"
-	}
-	if suffix == ".png" {
-		t = "image/png"
-	}
-	return t
-}
-
 func PathExistsOrCreate(path string) {
 	_, err := os.Stat(path)
 	if err == nil {
@@ -113,21 +103,21 @@ func PathExistsOrCreate(path string) {
 }
 
 func GenerateId() int {
-	// 生成一个随机 id
-	id := int(time.Now().Unix())
-	return id
+	b := make([]byte, 4)
+	if _, err := rand.Read(b); err != nil {
+		return int(time.Now().UnixNano())
+	}
+	return int(time.Now().UnixNano()) ^ int(int32(b[0])<<24|int32(b[1])<<16|int32(b[2])<<8|int32(b[3]))
 }
 
 func FilterHideTools(tools []types.Tool, cates []types.Catelog) []types.Tool {
 	result := make([]types.Tool, 0)
 	var hideCates []string
-	// 提取出需要隐藏的分类
 	for _, cate := range cates {
 		if cate.Hide {
 			hideCates = append(hideCates, cate.Name)
 		}
 	}
-	// 过滤工具
 	for _, tool := range tools {
 		if !tool.Hide && !In(tool.Catelog, hideCates) {
 			result = append(result, tool)

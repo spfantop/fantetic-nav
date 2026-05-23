@@ -15,7 +15,7 @@ func GetSetting() types.Setting {
 	`
 
 	var setting types.Setting
-	row := database.DB.QueryRow(sqlGetSetting, 0)
+	row := database.DB.QueryRow(sqlGetSetting)
 	var hideGithub interface{}
 	var hideAdmin interface{}
 	var hideToggleJumpTarget interface{}
@@ -60,29 +60,10 @@ func GetSetting() types.Setting {
 		setting.FooterLink = "https://henniubi.com"
 	}
 
-	if hideGithub == nil {
-		setting.HideGithub = false
-	} else {
-		setting.HideGithub = hideGithub.(int64) != 0
-	}
-
-	if hideAdmin == nil {
-		setting.HideAdmin = false
-	} else {
-		setting.HideAdmin = hideAdmin.(int64) != 0
-	}
-
-	if hideToggleJumpTarget == nil {
-		setting.HideToggleJumpTarget = false
-	} else {
-		setting.HideToggleJumpTarget = hideToggleJumpTarget.(int64) != 0
-	}
-
-	if jumpTargetBlank == nil {
-		setting.JumpTargetBlank = true
-	} else {
-		setting.JumpTargetBlank = jumpTargetBlank.(int64) != 0
-	}
+	setting.HideGithub = boolFromSQL(hideGithub)
+	setting.HideAdmin = boolFromSQL(hideAdmin)
+	setting.HideToggleJumpTarget = boolFromSQL(hideToggleJumpTarget)
+	setting.JumpTargetBlank = boolFromSQL(jumpTargetBlank)
 
 	return setting
 }
@@ -98,6 +79,7 @@ func UpdateSetting(data types.Setting) error {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	res, err := stmt.Exec(
 		data.Favicon,
 		data.Title,
@@ -115,8 +97,8 @@ func UpdateSetting(data types.Setting) error {
 		return err
 	}
 	_, err = res.RowsAffected()
-	if err != nil {
-		return err
+	if err == nil {
+		InvalidateCache()
 	}
-	return nil
+	return err
 }

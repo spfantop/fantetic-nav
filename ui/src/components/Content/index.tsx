@@ -31,7 +31,7 @@ const BACK_TO_TOP_THRESHOLD = 300;
 const ALL_TOOLS_TAG = "全部工具";
 const ADMIN_TAG = "管理后台";
 const DEFAULT_TAG = "默认";
-const HOME_CACHE_TTL = 2000;
+const HOME_CACHE_TTL = 60000;
 const HOME_STORAGE_CACHE_KEY_BASE = "fantetic_nav_home_cache_v2";
 const TAG_ORDER_STORAGE_KEY = "fantetic_nav_tag_order_v1";
 const FIXED_TAIL_TOOL_URLS = ["admin", "toggleJumpTarget"];
@@ -1047,13 +1047,17 @@ const Content = ({ editMode = false, onLeaveEdit }: ContentProps) => {
       ) : null}
 
       <div className="record-wraper">
-        <a href="https://henniubi.com" target="_blank" rel="noreferrer">
-          Fantetic Nav
+        <a href={data?.setting?.footerLink || "https://henniubi.com"} target="_blank" rel="noreferrer">
+          {data?.setting?.footerName || "Fantetic Nav"}
         </a>
-        <br />
-        <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">
-          {data?.setting?.govRecord ?? ""}
-        </a>
+        {data?.setting?.govRecord ? (
+          <>
+            <br />
+            <a href="https://beian.miit.gov.cn" target="_blank" rel="noreferrer">
+              {data.setting.govRecord}
+            </a>
+          </>
+        ) : null}
       </div>
     </>
   );

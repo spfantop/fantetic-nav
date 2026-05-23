@@ -9,55 +9,63 @@ import (
 
 func UpdateCatelog(data types.UpdateCatelogDto) {
 
-	// 查询分类原名称
 	sql_select_old_catelog_name := `select name from nav_catelog where id = ?;`
 	var oldName string
 	err := database.DB.QueryRow(sql_select_old_catelog_name, data.Id).Scan(&oldName)
 	utils.CheckErr(err)
 
-	// 开启事务
 	tx, err := database.DB.Begin()
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 
-	// 更新分类新名称
 	sql_update_catelog := `
 		UPDATE nav_catelog
 		SET name = ?, sort = ?, hide = ?
 		WHERE id = ?;
 		`
 	stmt, err := tx.Prepare(sql_update_catelog)
-	utils.CheckTxErr(err, tx)
+	if utils.CheckTxErr(err, tx) {
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.Name, data.Sort, data.Hide, data.Id)
-	utils.CheckTxErr(err, tx)
+	if utils.CheckTxErr(err, tx) {
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckTxErr(err, tx)
 
 	if oldName != data.Name {
-		// 更新工具分类新名称
 		sql_update_tools := `
 		UPDATE nav_table
 		SET catelog = ?
 		WHERE catelog = ?;
 		`
 		stmt2, err := tx.Prepare(sql_update_tools)
-		utils.CheckTxErr(err, tx)
+		if utils.CheckTxErr(err, tx) {
+			return
+		}
+		defer stmt2.Close()
 		res2, err := stmt2.Exec(data.Name, oldName)
-		utils.CheckTxErr(err, tx)
+		if utils.CheckTxErr(err, tx) {
+			return
+		}
 		_, err = res2.RowsAffected()
 		utils.CheckTxErr(err, tx)
 	}
-	// 提交事务
 	err = tx.Commit()
+	if err == nil {
+		InvalidateCache()
+	}
 	utils.CheckErr(err)
 }
 
 func AddCatelog(data types.AddCatelogDto) {
-	// 检查分类名称是否为空，如果为空则不创建
 	if data.Name == "" || strings.TrimSpace(data.Name) == "" {
 		return
 	}
 
-	// 先检查重复不重复
 	existCatelogs := GetAllCatelog()
 	var existCatelogsArr []string
 	for _, catelogDto := range existCatelogs {
@@ -71,10 +79,18 @@ func AddCatelog(data types.AddCatelogDto) {
 		VALUES (?,?,?);
 		`
 	stmt, err := database.DB.Prepare(sql_add_catelog)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.Name, data.Sort, data.Hide)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 	_, err = res.LastInsertId()
+	if err == nil {
+		InvalidateCache()
+	}
 	utils.CheckErr(err)
 }
 
@@ -84,14 +100,18 @@ func GetAllCatelog() []types.Catelog {
 	`
 	results := make([]types.Catelog, 0)
 	rows, err := database.DB.Query(sql_get_all)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return results
+	}
+	defer rows.Close()
 	for rows.Next() {
 		var catelog types.Catelog
 		err = rows.Scan(&catelog.Id, &catelog.Name, &catelog.Sort, &catelog.Hide)
-		utils.CheckErr(err)
+		if utils.CheckErr(err) {
+			continue
+		}
 		results = append(results, catelog)
 	}
-	defer rows.Close()
 	return results
 }
 
@@ -117,5 +137,9 @@ func UpdateCatelogsSort(updates []types.UpdateCatelogsSortDto) error {
 		}
 	}
 
-	return tx.Commit()
+	err = tx.Commit()
+	if err == nil {
+		InvalidateCache()
+	}
+	return err
 }

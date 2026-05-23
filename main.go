@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"embed"
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
+	"os/signal"
 	"path"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/mereith/nav/database"
@@ -41,7 +45,6 @@ func (b *binaryFileSystem) Exists(prefix string, filepath string) bool {
 		} else {
 			name = path.Join(b.root, p)
 		}
-		// 判断
 		if _, err := b.fs.Open(name); err != nil {
 			return false
 		}
@@ -68,15 +71,11 @@ func main() {
 	_ = router.SetTrustedProxies(nil)
 	router.Use(middleware.SecurityHeadersMiddleware())
 	router.Use(gzip.Gzip(gzip.DefaultCompression, gzip.WithExcludedExtensions([]string{".png", ".jpg", ".jpeg", ".ico", ".svg"})))
-	//router.Use(gzip.Gzip(gzip.DefaultCompression))
-	// 嵌入文件夹
-	router.GET("/manifest.json", handler.ManifastHanlder)
+	router.GET("/manifest.json", handler.ManifestHandler)
 	router.Use(Serve("/", BinaryFileSystem(fs, "public")))
 	api := router.Group("/api")
 	{
-		// 获取数据的路由
 		api.GET("/", handler.GetAllHandler)
-		// 获取用户信息
 
 		api.POST("/login", handler.LoginHandler)
 		api.GET("/login/captcha", handler.GetLoginCaptchaHandler)
@@ -84,10 +83,8 @@ func main() {
 		api.GET("/img", handler.GetLogoImgHandler)
 		api.POST("/img/batch", handler.GetLogoImgBatchHandler)
 
-		// 获取启用的搜索引擎（公开接口）
 		api.GET("/searchEngines", handler.GetEnabledSearchEnginesHandler)
 
-		// 管理员用的
 		admin := api.Group("/admin")
 		admin.Use(middleware.JWTMiddleware())
 		{
@@ -116,7 +113,6 @@ func main() {
 			admin.PUT("/catelog/:id", handler.UpdateCatelogHandler)
 			admin.PUT("/catelogs/sort", handler.UpdateCatelogsSortHandler)
 
-			// 搜索引擎管理路由
 			admin.GET("/searchEngine", handler.GetAllSearchEnginesHandler)
 			admin.POST("/searchEngine", handler.AddSearchEngineHandler)
 			admin.PUT("/searchEngine/:id", handler.UpdateSearchEngineHandler)
@@ -124,18 +120,32 @@ func main() {
 			admin.PUT("/searchEngines/sort", handler.UpdateSearchEngineSortHandler)
 		}
 	}
-	logger.LogInfo("应用启动成功，网址: http://localhost:%s", *port)
 	listen := fmt.Sprintf("%s:%s", *addr, *port)
 	srv := &http.Server{
 		Addr:         listen,
 		Handler:      router,
-		ReadTimeout:  3 * time.Second, // 可根据实际需要调整
-		WriteTimeout: 3 * time.Second, // 可根据实际需要调整
-		IdleTimeout:  3 * time.Second, // 建议设置为 10s 或更短
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	}
 
-	err := srv.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		logger.LogError("应用启动失败，错误: %s", err)
+	go func() {
+		logger.LogInfo("应用启动成功，网址: http://localhost:%s", *port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.LogError("应用启动失败，错误: %s", err)
+			os.Exit(1)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	logger.LogInfo("正在关闭服务器...")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := srv.Shutdown(ctx); err != nil {
+		logger.LogError("服务器关闭异常: %s", err)
 	}
+	logger.LogInfo("服务器已关闭")
 }

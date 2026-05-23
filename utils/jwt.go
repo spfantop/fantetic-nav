@@ -23,8 +23,8 @@ func RandomJWTKey() string {
 	return hex.EncodeToString(bytes)
 }
 
-// JTW 密钥
-var jwtSecret = []byte("replace_me")
+// JWT 密钥
+var jwtSecret = []byte{}
 
 func init() {
 	secret := strings.TrimSpace(os.Getenv("NAV_JWT_SECRET"))
@@ -32,36 +32,35 @@ func init() {
 		secret = RandomJWTKey()
 	}
 	if secret == "" {
-		secret = "change_me_in_production"
-		logger.LogError("JWT 密钥生成失败，已使用回退密钥，请尽快设置 NAV_JWT_SECRET")
+		logger.LogFatal("JWT 密钥生成失败，请设置 NAV_JWT_SECRET 环境变量后重试")
 	}
 	jwtSecret = []byte(secret)
 	logger.LogInfo("JWT 密钥初始化完成")
 }
 
-// 签名一个 JTW
+// SignJWT 签名 JWT
 func SignJWT(user types.User) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"name": user.Name,
 		"id":   user.Id,
 		"exp":  time.Now().Add(time.Hour * 24 * 30).Unix(),
 	})
-	tokenString, err := token.SignedString([]byte(jwtSecret))
+	tokenString, err := token.SignedString(jwtSecret)
 	return tokenString, err
 }
 
-// 签名一个 JTW
+// SignJWTForAPI 签名 API Token
 func SignJWTForAPI(tokenName string, tokenId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"name": tokenName,
 		"id":   tokenId,
 		"exp":  time.Now().Add(time.Hour * 24 * 365).Unix(),
 	})
-	tokenString, err := token.SignedString([]byte(jwtSecret))
+	tokenString, err := token.SignedString(jwtSecret)
 	return tokenString, err
 }
 
-// 解密一个 JTW
+// ParseJWT 解析 JWT
 func ParseJWT(tokenString string) (*jwt.Token, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (i interface{}, e error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {

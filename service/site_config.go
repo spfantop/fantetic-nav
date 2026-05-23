@@ -9,8 +9,8 @@ import (
 func GetSiteConfig() types.SiteConfig {
 	sql_get_site_config := `
 		SELECT id, noImageMode, compactMode, showClock
-		FROM nav_site_config 
-		ORDER BY id ASC 
+		FROM nav_site_config
+		ORDER BY id ASC
 		LIMIT 1;
 		`
 	var siteConfig types.SiteConfig
@@ -29,34 +29,9 @@ func GetSiteConfig() types.SiteConfig {
 		}
 	}
 
-	if noImageMode == nil {
-		siteConfig.NoImageMode = false
-	} else {
-		if noImageMode.(int64) == 0 {
-			siteConfig.NoImageMode = false
-		} else {
-			siteConfig.NoImageMode = true
-		}
-	}
-
-	if compactMode == nil {
-		siteConfig.CompactMode = false
-	} else {
-		if compactMode.(int64) == 0 {
-			siteConfig.CompactMode = false
-		} else {
-			siteConfig.CompactMode = true
-		}
-	}
-	if showClock == nil {
-		siteConfig.ShowClock = true
-	} else {
-		if showClock.(int64) == 0 {
-			siteConfig.ShowClock = false
-		} else {
-			siteConfig.ShowClock = true
-		}
-	}
+	siteConfig.NoImageMode = boolFromSQL(noImageMode)
+	siteConfig.CompactMode = boolFromSQL(compactMode)
+	siteConfig.ShowClock = boolFromSQL(showClock)
 
 	return siteConfig
 }
@@ -72,13 +47,14 @@ func UpdateSiteConfig(data types.SiteConfig) error {
 	if err != nil {
 		return err
 	}
+	defer stmt.Close()
 	res, err := stmt.Exec(data.NoImageMode, data.CompactMode, data.ShowClock)
 	if err != nil {
 		return err
 	}
 	_, err = res.RowsAffected()
-	if err != nil {
-		return err
+	if err == nil {
+		InvalidateCache()
 	}
-	return nil
+	return err
 }

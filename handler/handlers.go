@@ -170,14 +170,12 @@ func ImportToolsHandler(c *gin.Context) {
 	var tools []types.Tool
 	err := c.ShouldBindJSON(&tools)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
 		})
 		return
 	}
-	// 导入所有工具
 	service.ImportTools(tools)
 	c.JSON(200, gin.H{
 		"success": true,
@@ -186,7 +184,6 @@ func ImportToolsHandler(c *gin.Context) {
 }
 
 func DeleteApiTokenHandler(c *gin.Context) {
-	// 删除 Token
 	id := c.Param("id")
 	sql_delete_api_token := `
 		UPDATE nav_api_token
@@ -194,9 +191,22 @@ func DeleteApiTokenHandler(c *gin.Context) {
 		WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_delete_api_token)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除API Token失败",
+		})
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除API Token失败",
+		})
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
 	c.JSON(200, gin.H{
@@ -209,7 +219,6 @@ func AddApiTokenHandler(c *gin.Context) {
 	var token types.AddTokenDto
 	err := c.ShouldBindJSON(&token)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -220,7 +229,6 @@ func AddApiTokenHandler(c *gin.Context) {
 	var signedJwt string
 	signedJwt, err = utils.SignJWTForAPI(token.Name, newId)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -233,7 +241,6 @@ func AddApiTokenHandler(c *gin.Context) {
 		Id:       newId,
 		Disabled: 0,
 	})
-	// 签名 jwt
 	c.JSON(200, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -248,7 +255,6 @@ func AddApiTokenHandler(c *gin.Context) {
 func UpdateSettingHandler(c *gin.Context) {
 	var data types.Setting
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -258,7 +264,6 @@ func UpdateSettingHandler(c *gin.Context) {
 	logger.LogInfo("更新配置: %+v", data)
 	err := service.UpdateSetting(data)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -274,7 +279,6 @@ func UpdateSettingHandler(c *gin.Context) {
 func UpdateUserHandler(c *gin.Context) {
 	var data types.UpdateUserDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -291,7 +295,6 @@ func UpdateUserHandler(c *gin.Context) {
 func UpdateSiteConfigHandler(c *gin.Context) {
 	var data types.SiteConfig
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -301,7 +304,6 @@ func UpdateSiteConfigHandler(c *gin.Context) {
 	logger.LogInfo("更新网站配置: %+v", data)
 	err := service.UpdateSiteConfig(data)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -315,19 +317,32 @@ func UpdateSiteConfigHandler(c *gin.Context) {
 }
 
 func GetAllHandler(c *gin.Context) {
-	tools := service.GetAllTool()
-	// 获取全部数据
-	catelogs := service.GetAllCatelog()
+	cached := service.GetCachedData()
+	if cached == nil {
+		service.RefreshCache()
+		cached = service.GetCachedData()
+	}
+	var tools []types.Tool
+	var catelogs []types.Catelog
+	var setting types.Setting
+	var siteConfig types.SiteConfig
+	if cached != nil {
+		tools = cached.Tools
+		catelogs = cached.Catelogs
+		setting = cached.Setting
+		siteConfig = cached.SiteConfig
+	} else {
+		tools = service.GetAllTool()
+		catelogs = service.GetAllCatelog()
+		setting = service.GetSetting()
+		siteConfig = service.GetSiteConfig()
+	}
 	if !utils.IsLogin(c) {
-		// 过滤掉隐藏工具
 		tools = utils.FilterHideTools(tools, catelogs)
 	}
 	if !utils.IsLogin(c) {
-		// 过滤掉隐藏分类
 		catelogs = utils.FilterHideCates(catelogs)
 	}
-	setting := service.GetSetting()
-	siteConfig := service.GetSiteConfig()
 
 	cachePayload := gin.H{
 		"tools":      tools,
@@ -391,7 +406,7 @@ func GetLogoImgHandler(c *gin.Context) {
 		c.Header("Cache-Control", "no-store")
 		c.JSON(http.StatusNotFound, gin.H{
 			"success":      false,
-			"errorMessage": "?????????????",
+			"errorMessage": "图片数据无效",
 		})
 		return
 	}
@@ -487,7 +502,6 @@ func GetLogoImgBatchHandler(c *gin.Context) {
 }
 
 func GetAdminAllDataHandler(c *gin.Context) {
-	// 管理员获取全部数据，还有个用户名。
 	tools := service.GetAllTool()
 	catelogs := service.GetAllCatelog()
 	setting := service.GetSetting()
@@ -535,7 +549,6 @@ func LoginHandler(c *gin.Context) {
 
 	var data types.LoginDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -575,7 +588,6 @@ func LoginHandler(c *gin.Context) {
 	if utils.LooksLikeBcryptHash(user.Password) {
 		validPassword = utils.VerifyPassword(user.Password, data.Password)
 	} else {
-		// 兼容历史明文密码，登录成功后自动迁移为哈希存储
 		validPassword = user.Password == data.Password
 		if validPassword {
 			hashed, hashErr := utils.HashPassword(data.Password)
@@ -598,9 +610,14 @@ func LoginHandler(c *gin.Context) {
 		return
 	}
 	service.RecordLoginSuccess(clientIP)
-	// 生成 token
 	token, err := utils.SignJWT(user)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "生成Token失败",
+		})
+		return
+	}
 
 	c.JSON(200, gin.H{
 		"success": true,
@@ -639,7 +656,6 @@ func GetLoginCaptchaHandler(c *gin.Context) {
 	})
 }
 
-// 退出登录
 func LogoutHandler(c *gin.Context) {
 	c.JSON(200, gin.H{
 		"success": true,
@@ -648,10 +664,8 @@ func LogoutHandler(c *gin.Context) {
 }
 
 func AddToolHandler(c *gin.Context) {
-	// 添加工具
 	var data types.AddToolDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -662,7 +676,6 @@ func AddToolHandler(c *gin.Context) {
 	logger.LogInfo("%s 获取 logo: %s", data.Name, data.Logo)
 	id, err := service.AddTool(data)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -679,31 +692,58 @@ func AddToolHandler(c *gin.Context) {
 }
 
 func DeleteToolHandler(c *gin.Context) {
-	// 删除工具
 	id := c.Param("id")
 	sql_delete_tool := `
 		DELETE FROM nav_table WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_delete_tool)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除工具失败",
+		})
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除工具失败",
+		})
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
-	// 删除工具的 logo，如果有
 	numberId, err := strconv.Atoi(id)
-	utils.CheckErr(err)
+	if err != nil {
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "删除成功",
+		})
+		return
+	}
 	url1 := service.GetToolLogoUrlById(numberId)
 	urlEncoded := url.QueryEscape(url1)
 	sql_delete_tool_img := `
 		DELETE FROM nav_img WHERE url = ?;
 		`
 	stmt, err = database.DB.Prepare(sql_delete_tool_img)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(200, gin.H{
+			"success": true,
+			"message": "删除成功",
+		})
+		return
+	}
+	defer stmt.Close()
 	res, err = stmt.Exec(urlEncoded)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
+	service.InvalidateCache()
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "删除成功",
@@ -711,10 +751,8 @@ func DeleteToolHandler(c *gin.Context) {
 }
 
 func UpdateToolHandler(c *gin.Context) {
-	// 更新工具
 	var data types.UpdateToolDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -734,10 +772,8 @@ func UpdateToolHandler(c *gin.Context) {
 }
 
 func AddCatelogHandler(c *gin.Context) {
-	// 添加分类
 	var data types.AddCatelogDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -753,17 +789,30 @@ func AddCatelogHandler(c *gin.Context) {
 }
 
 func DeleteCatelogHandler(c *gin.Context) {
-	// 删除分类
 	id := c.Param("id")
 	sql_delete_catelog := `
 		DELETE FROM nav_catelog WHERE id = ?;
 		`
 	stmt, err := database.DB.Prepare(sql_delete_catelog)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除分类失败",
+		})
+		return
+	}
+	defer stmt.Close()
 	res, err := stmt.Exec(id)
-	utils.CheckErr(err)
+	if utils.CheckErr(err) {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"success":      false,
+			"errorMessage": "删除分类失败",
+		})
+		return
+	}
 	_, err = res.RowsAffected()
 	utils.CheckErr(err)
+	service.InvalidateCache()
 	c.JSON(200, gin.H{
 		"success": true,
 		"message": "删除分类成功",
@@ -771,10 +820,8 @@ func DeleteCatelogHandler(c *gin.Context) {
 }
 
 func UpdateCatelogHandler(c *gin.Context) {
-	// 更新分类
 	var data types.UpdateCatelogDto
 	if err := c.ShouldBindJSON(&data); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -792,7 +839,6 @@ func UpdateCatelogHandler(c *gin.Context) {
 func UpdateCatelogsSortHandler(c *gin.Context) {
 	var updates []types.UpdateCatelogsSortDto
 	if err := c.ShouldBindJSON(&updates); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -802,7 +848,6 @@ func UpdateCatelogsSortHandler(c *gin.Context) {
 
 	err := service.UpdateCatelogsSort(updates)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -816,8 +861,7 @@ func UpdateCatelogsSortHandler(c *gin.Context) {
 	})
 }
 
-func ManifastHanlder(c *gin.Context) {
-
+func ManifestHandler(c *gin.Context) {
 	setting := service.GetSetting()
 	title := setting.Title
 
@@ -862,7 +906,6 @@ func ManifastHanlder(c *gin.Context) {
 func UpdateToolsSortHandler(c *gin.Context) {
 	var updates []types.UpdateToolsSortDto
 	if err := c.ShouldBindJSON(&updates); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -872,7 +915,6 @@ func UpdateToolsSortHandler(c *gin.Context) {
 
 	err := service.UpdateToolsSort(updates)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -889,7 +931,6 @@ func UpdateToolsSortHandler(c *gin.Context) {
 func UpdateToolsAllSortHandler(c *gin.Context) {
 	var updates []types.UpdateToolsAllSortDto
 	if err := c.ShouldBindJSON(&updates); err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -899,7 +940,6 @@ func UpdateToolsAllSortHandler(c *gin.Context) {
 
 	err := service.UpdateToolsAllSort(updates)
 	if err != nil {
-		utils.CheckErr(err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"success":      false,
 			"errorMessage": err.Error(),
@@ -915,7 +955,6 @@ func UpdateToolsAllSortHandler(c *gin.Context) {
 
 // ==================== 搜索引擎相关处理函数 ====================
 
-// 获取所有搜索引擎
 func GetAllSearchEnginesHandler(c *gin.Context) {
 	engines, err := database.GetAllSearchEngines()
 	if err != nil {
@@ -931,7 +970,6 @@ func GetAllSearchEnginesHandler(c *gin.Context) {
 	})
 }
 
-// 获取启用的搜索引擎（用于前端搜索功能）
 func GetEnabledSearchEnginesHandler(c *gin.Context) {
 	engines, err := database.GetEnabledSearchEngines()
 	if err != nil {
@@ -947,7 +985,6 @@ func GetEnabledSearchEnginesHandler(c *gin.Context) {
 	})
 }
 
-// 添加搜索引擎
 func AddSearchEngineHandler(c *gin.Context) {
 	var engine types.SearchEngine
 	err := c.ShouldBindJSON(&engine)
@@ -977,7 +1014,6 @@ func AddSearchEngineHandler(c *gin.Context) {
 	})
 }
 
-// 更新搜索引擎
 func UpdateSearchEngineHandler(c *gin.Context) {
 	var engine types.SearchEngine
 	err := c.ShouldBindJSON(&engine)
@@ -989,7 +1025,6 @@ func UpdateSearchEngineHandler(c *gin.Context) {
 		return
 	}
 
-	// 从URL参数获取ID
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -1016,7 +1051,6 @@ func UpdateSearchEngineHandler(c *gin.Context) {
 	})
 }
 
-// 删除搜索引擎
 func DeleteSearchEngineHandler(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.Atoi(idStr)
@@ -1043,7 +1077,6 @@ func DeleteSearchEngineHandler(c *gin.Context) {
 	})
 }
 
-// 更新搜索引擎排序
 func UpdateSearchEngineSortHandler(c *gin.Context) {
 	var sortData []struct {
 		Id   int `json:"id"`
