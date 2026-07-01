@@ -1,5 +1,6 @@
 # Fantetic Nav CF
 *参考项目：https://github.com/Mereithhh/van-nav  感谢原作者的付出。*
+此分支为cf版本，go版本为另外的修改版，请前往go分支查看。
 > 项目示例：https://fantetic-nav-cf.fan-89c.workers.dev/admin
 > 
 > 登陆账号/密码：testadmin/adminadmin
